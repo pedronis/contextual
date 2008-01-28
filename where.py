@@ -158,7 +158,9 @@ def parse(config):
                 WhereCondClass = WHERE_CONDS[cond_op]
                 relative = next_part()
                 where.push_cond(WhereCondClass(relative))
-        landmarks.append(Landmark(prefix, wildcard_child, where, context))
+        lmark = Landmark(prefix, wildcard_child, where, context)
+        lmark.src = line
+        landmarks.append(lmark)
     return landmarks
 
 # ________________________________________________________________

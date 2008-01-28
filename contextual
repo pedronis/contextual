@@ -1,0 +1,6 @@
+#!/bin/bash
+cfg=$1
+export runcmd=$2
+shift 2
+eval $(./_contextual.py $cfg $runcmd "$@" )
+$runcmd "$@"
