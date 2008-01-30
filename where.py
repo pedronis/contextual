@@ -196,6 +196,7 @@ def test_parse():
     assert isinstance(c, WhereNonEmpty)
     assert c.relative == '.bashrc'
     assert l.context == 'zzz'
+    assert l.src == 'where -s .bashrc := zzz'
 
     l = parse(['#test', '', '/home/* where -e .bashrc := zzz'])[0]
     assert l.prefix_segs == ['home']
