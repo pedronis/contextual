@@ -1,6 +1,10 @@
 #!/bin/bash
 cfg=$1
 export runcmd=$2
+if [ -z "$runcmd" ] ; then
+    echo usage: contextual conf command [:trace] [:shortcut] args...
+    exit 0
+fi
 shift 2
-eval $(_contextual.py $cfg $runcmd "$@" )
+eval $(_contextual.py $cfg "$runcmd" "$@" )
 $runcmd "$@"
