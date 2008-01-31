@@ -69,6 +69,8 @@ class WhereClause(object):
         return True
 
 def segs(p):
+    if p == '/':
+        return []
     p_segs = p.split('/')
     if p_segs[0] == '':
         p_segs.pop(0)
@@ -187,6 +189,10 @@ def test_landmark():
     l = Landmark(HOME, False, None, 'foo')
     res = l.match(p, s)
     assert res == (HOME, 'foo')
+
+    l = Landmark('/', False, None, 'foo')
+    res = l.match(p, s)
+    assert res == ('/', 'foo')
 
 def test_parse():
     l = parse(['#test', '', 'where -s .bashrc := zzz'])[0]
