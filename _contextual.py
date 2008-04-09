@@ -30,7 +30,7 @@ def main(args):
     if len(args) >=4 and args[3].startswith(':'):
         shortcut = args[3]
         locations = [shortcut[1:]]
-        how = lambda lmark, shortcut, _: lmark.match_shortcut(shortcut)
+        how = where.Landmark.match_shortcut
     else:
         locations = []
         if '/' in runcmd:

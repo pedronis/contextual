@@ -87,7 +87,7 @@ class Landmark(object):
         self.where = where
         self.context = context
 
-    def match_shortcut(self, shortcut):
+    def match_shortcut(self, shortcut, _):
         if self.prefix_segs is None:
             return None, None
         if self.wildcard_child:
