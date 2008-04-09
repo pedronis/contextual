@@ -95,25 +95,29 @@ class Landmark(object):
             if not os.path.isdir(lmark_p):
                 return None, None
         else:
-            if shortcut != self.prefix_segs[-1]:
+            if not self.prefix_segs or shortcut != self.prefix_segs[-1]:
                 return None, None
         if self.where is None or self.where.test(lmark_p):
             return lmark_p, self.context
         return None, None
 
-    def match(self, p, p_segs):
-        where = self.where
-        if self.prefix_segs is None:
-            if where is None:
-                return None, None
-            i = len(p_segs)
-            while i >= 1:
-                lmark_p = os.path.join('/', '/'.join(p_segs[0:i]))
-                if where.test(lmark_p):
-                    return lmark_p, self.context
-                i -= 1
+    def match_unanchored(self, p, p_segs):
+        where = self.where        
+        if where is None:
             return None, None
+        i = len(p_segs)
+        while i >= 1:
+            lmark_p = os.path.join('/', '/'.join(p_segs[0:i]))
+            if where.test(lmark_p):
+                return lmark_p, self.context
+            i -= 1
+        return None, None
         
+    def match(self, p, p_segs):
+        if self.prefix_segs is None:
+            return self.match_unanchored(p, p_segs)
+
+        where = self.where        
         n_prefix_segs = len(self.prefix_segs)
         if p_segs[0:n_prefix_segs] != self.prefix_segs:
             return None, None

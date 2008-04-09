@@ -3,19 +3,27 @@ import sys, os, subprocess
 
 import where
 
-def infer_context(landmarks, match, locations, trace):
+def infer_context(landmarks, how, locations, hint, trace):
+    match_kind = how[:1]
+    match = getattr(where.Landmark, ('match_'+how).strip('_'))
     for location in locations:
         location_segs = where.segs(location)
         for lmark in landmarks:
             lmark_p, context = match(lmark, location, location_segs)
             if lmark_p is not None:
                 if trace:
-                    print >>sys.stderr, "%s ~~ %s => yes" % (location, lmark.src)
-                return lmark_p, context
+                    print >>sys.stderr, "%s ~%s~ %s => yes" % (location,
+                                                               match_kind,
+                                                               lmark.src)
+                return lmark, lmark_p, context
             if trace:
-                print >>sys.stderr, "%s ~~ %s => no" % (location, lmark.src)
+                print >>sys.stderr, "%s ~%s~ %s => no" % (location,
+                                                          match_kind,
+                                                          lmark.src)
 
-    return None, None
+    print >>sys.stderr, "failed to infer context: %s" % hint
+    print >>sys.stdout, "exit 1"
+    sys.exit(1)
 
 def main(args):
     args = list(args)
@@ -23,32 +31,44 @@ def main(args):
     runcmd = args[2]
     shortcut = None
     trace = False
+    like = False
     if len(args) >=4 and args[3] == ':trace':
         args.pop(3)
         trace = True
-        
     if len(args) >=4 and args[3].startswith(':'):
-        shortcut = args[3]
-        locations = [shortcut[1:]]
-        how = where.Landmark.match_shortcut
+        shortcut = args.pop(3)
+        if shortcut.startswith(':='):
+            shortcut = ':' + shortcut[2:]
+            like = True
+
+    locations = []
+    if '/' in runcmd:
+        locations.append(os.path.dirname(os.path.abspath(runcmd)))
+    for farg in args[3:]:
+        if not (farg.startswith('-') or farg.startswith('+')):
+            if os.path.exists(farg):
+                locations.append(os.path.abspath(farg))
+            break
+    locations.append(os.getcwd())
+        
+    if shortcut:
+        lmark, lmark_p, context = infer_context(landmarks,
+                                         'shortcut',
+                                         [shortcut[1:]],
+                                         shortcut,
+                                         trace)
+        if like:
+            _, lmark_p, context = infer_context([lmark],
+                                                'unanchored',
+                                                locations,
+                                                locations,
+                                                trace)                    
     else:
-        locations = []
-        if '/' in runcmd:
-            locations.append(os.path.dirname(os.path.abspath(runcmd)))
-        for farg in args[3:]:
-            if not (farg.startswith('-') or farg.startswith('+')):
-                if os.path.exists(farg):
-                    locations.append(os.path.abspath(farg))
-                break
-        locations.append(os.getcwd())
-        how = where.Landmark.match
-        
-    lmark_p, context = infer_context(landmarks, how, locations, trace)
-        
-    if lmark_p is None:
-        print >>sys.stderr, "failed to infer context: %s" % (shortcut or locations)
-        print >>sys.stdout, "exit 1"
-        sys.exit(1)
+        _, lmark_p, context = infer_context(landmarks,
+                                            '',
+                                            locations,
+                                            locations,
+                                            trace)        
 
     context = context % {'runcmd': runcmd, 'where': lmark_p}
 
