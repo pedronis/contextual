@@ -97,6 +97,7 @@ class Landmark(object):
         else:
             if not self.prefix_segs or shortcut != self.prefix_segs[-1]:
                 return None, None
+            lmark_p = os.path.join('/', '/'.join(self.prefix_segs))            
         if self.where is None or self.where.test(lmark_p):
             return lmark_p, self.context
         return None, None
@@ -198,6 +199,15 @@ def test_landmark():
     res = l.match(p, s)
     assert res == ('/', 'foo')
 
+    # match shortcut
+    l = Landmark(os.path.dirname(HOME), True, where, 'foo')
+    res = l.match_shortcut(os.path.basename(HOME), None)
+    assert res == (HOME, 'foo')
+
+    l = Landmark(HOME, False, where, 'foo')
+    res = l.match_shortcut(os.path.basename(HOME), None)
+    assert res == (HOME, 'foo')    
+    
 def test_parse():
     l = parse(['#test', '', 'where -s .bashrc := zzz'])[0]
     assert l.prefix_segs is None
