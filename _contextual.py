@@ -50,7 +50,7 @@ def main(args):
                 locations.append(os.path.abspath(farg))
             break
     locations.append(os.getcwd())
-        
+
     if shortcut:
         lmark, lmark_p, context = infer_context(landmarks,
                                          'shortcut',
@@ -62,13 +62,13 @@ def main(args):
                                                 'unanchored',
                                                 locations,
                                                 locations,
-                                                trace)                    
+                                                trace)
     else:
         _, lmark_p, context = infer_context(landmarks,
                                             '',
                                             locations,
                                             locations,
-                                            trace)        
+                                            trace)
 
     context = context % {'runcmd': runcmd, 'where': lmark_p}
 
@@ -84,13 +84,13 @@ def main(args):
     if trace:
         print >>sys.stderr, "CONTEXT => %s" % context
         print >>sys.stdout, "exit 0"
-        sys.exit(0)        
+        sys.exit(0)
     else:
         print >>sys.stdout, context
-    
+
     if shortcut:
-        print >>sys.stdout, " ; shift 1" 
-    
+        print >>sys.stdout, " ; shift 1"
+
 
 if __name__ == '__main__':
     main(sys.argv)

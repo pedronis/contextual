@@ -11,29 +11,29 @@ class WhereCond(object):
 
 class WhereDir(WhereCond):
     syn = '-d'
-    
+
     check = staticmethod(os.path.isdir)
 
 class WhereExists(WhereCond):
     syn = '-e'
-    
+
     check = staticmethod(os.path.exists)
 
 class WhereFile(WhereCond):
     syn = '-f'
-    
+
     check = staticmethod(os.path.isfile)
 
 class WhereNonEmpty(WhereCond):
     syn = '-s'
-    
+
     @staticmethod
     def check(p):
         return os.path.isfile(p) and os.path.getsize(p) > 0
 
 class WhereExecutable(WhereCond):
     syn = '-x'
-    
+
     @staticmethod
     def check(p):
        return os.access(p, os.X_OK)
@@ -42,7 +42,7 @@ WOTH = stat.S_IWGRP | stat.S_IWOTH
 
 class WhereMine(WhereCond):
     syn = '--mine'
-    
+
     @staticmethod
     def check(p):
         st = os.stat(p)
@@ -97,13 +97,13 @@ class Landmark(object):
         else:
             if not self.prefix_segs or shortcut != self.prefix_segs[-1]:
                 return None, None
-            lmark_p = os.path.join('/', '/'.join(self.prefix_segs))            
+            lmark_p = os.path.join('/', '/'.join(self.prefix_segs))
         if self.where is None or self.where.test(lmark_p):
             return lmark_p, self.context
         return None, None
 
     def match_unanchored(self, p, p_segs):
-        where = self.where        
+        where = self.where
         if where is None:
             return None, None
         i = len(p_segs)
@@ -113,12 +113,12 @@ class Landmark(object):
                 return lmark_p, self.context
             i -= 1
         return None, None
-        
+
     def match(self, p, p_segs):
         if self.prefix_segs is None:
             return self.match_unanchored(p, p_segs)
 
-        where = self.where        
+        where = self.where
         n_prefix_segs = len(self.prefix_segs)
         if p_segs[0:n_prefix_segs] != self.prefix_segs:
             return None, None
@@ -186,11 +186,11 @@ def test_landmark():
     l = Landmark(os.path.dirname(HOME), True, where, 'foo')
     res = l.match(p, s)
     assert res == (HOME, 'foo')
-    
+
     l = Landmark(HOME, False, where, 'foo')
     res = l.match(p, s)
     assert res == (HOME, 'foo')
-    
+
     l = Landmark(HOME, False, None, 'foo')
     res = l.match(p, s)
     assert res == (HOME, 'foo')
@@ -206,8 +206,8 @@ def test_landmark():
 
     l = Landmark(HOME, False, where, 'foo')
     res = l.match_shortcut(os.path.basename(HOME), None)
-    assert res == (HOME, 'foo')    
-    
+    assert res == (HOME, 'foo')
+
 def test_parse():
     l = parse(['#test', '', 'where -s .bashrc := zzz'])[0]
     assert l.prefix_segs is None
@@ -231,7 +231,7 @@ def test_parse():
     c = l.where.conds[0]
     assert isinstance(c, WhereFile)
     assert c.relative == '.bashrc'
-    
+
     l = parse(['#test', '', '/home/pedronis := zzz'])[0]
     assert l.prefix_segs == ['home', 'pedronis']
     assert not l.wildcard_child
