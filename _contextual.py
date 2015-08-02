@@ -49,6 +49,9 @@ def main(args):
             if os.path.exists(farg):
                 locations.append(os.path.abspath(farg))
             break
+    PWD = os.getenv('PWD')
+    if PWD:
+        locations.append(PWD)
     locations.append(os.getcwd())
 
     if shortcut:
