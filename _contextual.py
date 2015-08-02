@@ -3,7 +3,6 @@ import sys, os, subprocess
 
 import where
 
-
 def infer_context(landmarks, how, locations, hint, trace):
     match_kind = how[:1]
     match = getattr(where.Landmark, ('match_'+how).strip('_'))
@@ -25,11 +24,6 @@ def infer_context(landmarks, how, locations, hint, trace):
     print >>sys.stderr, "failed to infer context: %s" % hint
     print >>sys.stdout, "exit 1"
     sys.exit(1)
-
-
-def working_dir():
-    return os.getenv("PWD") or os.getcwd()
-
 
 def main(args):
     args = list(args)
@@ -55,7 +49,7 @@ def main(args):
             if os.path.exists(farg):
                 locations.append(os.path.abspath(farg))
             break
-    locations.append(working_dir())
+    locations.append(os.getcwd())
 
     if shortcut:
         lmark, lmark_p, context = infer_context(landmarks,
