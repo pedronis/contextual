@@ -1,66 +1,53 @@
-import os, stat
+"""
+Parse directory landmark to context definitions, directory landmark matching.
+"""
+import os
+
+WHERE_CHECKS = {}
+
+
+def register_check(syn):
+    """Register syntax (e.g. -e) to check(path) function."""
+    def _register(check):
+        WHERE_CHECKS[syn] = check
+        return check
+    return _register
+
+register_check('-d')(os.path.isdir)
+register_check('-e')(os.path.exists)
+register_check('-f')(os.path.isfile)
+
+
+@register_check('-s')
+def check_is_non_empty(p):
+    return os.path.isfile(p) and os.path.getsize(p) > 0
+
+
+@register_check('-x')
+def check_is_executable(p):
+    return os.access(p, os.X_OK)
+
 
 class WhereCond(object):
+    """Represents and tests one directory landmark condition."""
 
-    def __init__(self, relative):
+    def __init__(self, check, relative):
+        self.check = check
         self.relative = relative
 
     def test(self, p):
         p = os.path.join(p, self.relative)
         return self.check(p)
 
-class WhereDir(WhereCond):
-    syn = '-d'
-
-    check = staticmethod(os.path.isdir)
-
-class WhereExists(WhereCond):
-    syn = '-e'
-
-    check = staticmethod(os.path.exists)
-
-class WhereFile(WhereCond):
-    syn = '-f'
-
-    check = staticmethod(os.path.isfile)
-
-class WhereNonEmpty(WhereCond):
-    syn = '-s'
-
-    @staticmethod
-    def check(p):
-        return os.path.isfile(p) and os.path.getsize(p) > 0
-
-class WhereExecutable(WhereCond):
-    syn = '-x'
-
-    @staticmethod
-    def check(p):
-       return os.access(p, os.X_OK)
-
-WOTH = stat.S_IWGRP | stat.S_IWOTH
-
-class WhereMine(WhereCond):
-    syn = '--mine'
-
-    @staticmethod
-    def check(p):
-        st = os.stat(p)
-        return st.st_uid == os.getuid() and (st.st_mode & WOTH) == 0
-
-
-WHERE_CONDS = {}
-for v in globals().values():
-    if hasattr(v, 'syn'):
-        WHERE_CONDS[v.syn] = v
 
 class WhereClause(object):
+    """Represent and tests all directory landmark conditions."""
 
     def __init__(self):
         self.conds = []
 
-    def push_cond(self, cond):
-        self.conds.append(cond)
+    def push_cond(self, check, relative):
+        self.conds.append(WhereCond(check, relative))
 
     def test(self, p):
         for cond in self.conds:
@@ -68,7 +55,9 @@ class WhereClause(object):
                 return False
         return True
 
+
 def segs(p):
+    """Segment a path."""
     if p == '/':
         return []
     p_segs = p.split('/')
@@ -76,7 +65,9 @@ def segs(p):
         p_segs.pop(0)
     return p_segs
 
+
 class Landmark(object):
+    """Directory landmark representation and matching."""
 
     def __init__(self, prefix, wildcard_child, where, context):
         if prefix is None:
@@ -133,9 +124,11 @@ class Landmark(object):
                 return None, None
         return lmark_p, self.context
 
-def parse(config):
+
+def parse(cfg_lines):
+    """Parse config lines into directory landmark to context definitions."""
     landmarks = []
-    for line in config:
+    for line in cfg_lines:
         line = line.strip()
         if not line or line.startswith('#'):
             continue
@@ -159,80 +152,13 @@ def parse(config):
             next_part = iter(parts).next
             while True:
                 try:
-                    cond_op = next_part()
+                    check_op = next_part()
                 except StopIteration:
                     break
-                WhereCondClass = WHERE_CONDS[cond_op]
+                check = WHERE_CHECKS[check_op]
                 relative = next_part()
-                where.push_cond(WhereCondClass(relative))
+                where.push_cond(check, relative)
         lmark = Landmark(prefix, wildcard_child, where, context)
         lmark.src = line
         landmarks.append(lmark)
     return landmarks
-
-# ________________________________________________________________
-
-def test_landmark():
-    p = os.path.dirname(__file__)
-    HOME = os.getenv('HOME')
-    nempty = WhereNonEmpty('.bashrc')
-    s = segs(p)
-    where = WhereClause()
-    where.push_cond(nempty)
-    l = Landmark(None, False, where, 'foo')
-    res = l.match(p, s)
-    assert res == (HOME, 'foo')
-
-    l = Landmark(os.path.dirname(HOME), True, where, 'foo')
-    res = l.match(p, s)
-    assert res == (HOME, 'foo')
-
-    l = Landmark(HOME, False, where, 'foo')
-    res = l.match(p, s)
-    assert res == (HOME, 'foo')
-
-    l = Landmark(HOME, False, None, 'foo')
-    res = l.match(p, s)
-    assert res == (HOME, 'foo')
-
-    l = Landmark('/', False, None, 'foo')
-    res = l.match(p, s)
-    assert res == ('/', 'foo')
-
-    # match shortcut
-    l = Landmark(os.path.dirname(HOME), True, where, 'foo')
-    res = l.match_shortcut(os.path.basename(HOME), None)
-    assert res == (HOME, 'foo')
-
-    l = Landmark(HOME, False, where, 'foo')
-    res = l.match_shortcut(os.path.basename(HOME), None)
-    assert res == (HOME, 'foo')
-
-def test_parse():
-    l = parse(['#test', '', 'where -s .bashrc := zzz'])[0]
-    assert l.prefix_segs is None
-    assert not l.wildcard_child
-    c = l.where.conds[0]
-    assert isinstance(c, WhereNonEmpty)
-    assert c.relative == '.bashrc'
-    assert l.context == 'zzz'
-    assert l.src == 'where -s .bashrc := zzz'
-
-    l = parse(['#test', '', '/home/* where -e .bashrc := zzz'])[0]
-    assert l.prefix_segs == ['home']
-    assert l.wildcard_child
-    c = l.where.conds[0]
-    assert isinstance(c, WhereExists)
-    assert c.relative == '.bashrc'
-
-    l = parse(['#test', '', '/home/pedronis where -f .bashrc := zzz'])[0]
-    assert l.prefix_segs == ['home', 'pedronis']
-    assert not l.wildcard_child
-    c = l.where.conds[0]
-    assert isinstance(c, WhereFile)
-    assert c.relative == '.bashrc'
-
-    l = parse(['#test', '', '/home/pedronis := zzz'])[0]
-    assert l.prefix_segs == ['home', 'pedronis']
-    assert not l.wildcard_child
-    assert l.where is None
