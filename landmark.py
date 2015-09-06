@@ -2,6 +2,7 @@
 Parse directory landmark to context definitions, directory landmark matching.
 """
 import os
+import shlex
 
 WHERE_CHECKS = {}
 
@@ -133,7 +134,7 @@ def parse(cfg_lines):
         if not line or line.startswith('#'):
             continue
         landmark_def, context = line.split(':=')
-        parts = landmark_def.split()
+        parts = shlex.split(landmark_def)
         context = context.strip()
         wildcard_child = False
         if parts[0] != 'where':

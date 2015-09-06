@@ -73,6 +73,13 @@ def test_parse():
     assert c.check == os.path.isfile
     assert c.relative == '.bashrc'
 
+    l = parse(['#test', '', '/home/pedronis where -f "this one" := zzz'])[0]
+    assert l.prefix_segs == ['home', 'pedronis']
+    assert not l.wildcard_child
+    c = l.where.conds[0]
+    assert c.check == os.path.isfile
+    assert c.relative == 'this one'
+
     l = parse(['#test', '', '/home/pedronis := zzz'])[0]
     assert l.prefix_segs == ['home', 'pedronis']
     assert not l.wildcard_child
