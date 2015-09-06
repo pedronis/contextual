@@ -56,6 +56,12 @@ class WhereClause(object):
                 return False
         return True
 
+class Succeed(object):
+    """Always test true."""
+
+    def test(self, p):
+        return True
+
 
 def segs(p):
     """Segment a path."""
@@ -70,19 +76,20 @@ def segs(p):
 class Landmark(object):
     """Directory landmark representation and matching."""
 
-    def __init__(self, prefix, wildcard_child, where, context):
+    def __init__(self, prefix, wildcard_descendant, where, context):
         if prefix is None:
-            self.prefix_segs = None
+            self.prefix_segs = []
+            wildcard_descendant = 'rec'
         else:
             self.prefix_segs = segs(prefix)
-        self.wildcard_child = wildcard_child
+        self.wildcard_descendant = wildcard_descendant
         self.where = where
         self.context = context
 
     def match_shortcut(self, shortcut, _):
         if self.prefix_segs is None:
             return None, None
-        if self.wildcard_child:
+        if self.wildcard_descendant:
             lmark_p = os.path.join('/', '/'.join(self.prefix_segs), shortcut)
             if not os.path.isdir(lmark_p):
                 return None, None
@@ -94,36 +101,29 @@ class Landmark(object):
             return lmark_p, self.context
         return None, None
 
-    def match_unanchored(self, p, p_segs):
+    def match(self, p, p_segs):
         where = self.where
-        if where is None:
+        if self.wildcard_descendant and not where:
             return None, None
-        i = len(p_segs)
-        while i >= 1:
+        n_prefix_segs = len(self.prefix_segs)
+        if p_segs[0:n_prefix_segs] != self.prefix_segs:
+            return None, None
+        if self.wildcard_descendant is None:
+            up_to = start = n_prefix_segs
+            if where is None:
+                where = Succeed()
+        elif self.wildcard_descendant == 'one':
+            up_to = start = n_prefix_segs+1
+        elif self.wildcard_descendant == 'rec':
+            start = n_prefix_segs
+            up_to = len(p_segs)
+        i = up_to
+        while i >= start and i <= len(p_segs):
             lmark_p = os.path.join('/', '/'.join(p_segs[0:i]))
             if where.test(lmark_p):
                 return lmark_p, self.context
             i -= 1
         return None, None
-
-    def match(self, p, p_segs):
-        if self.prefix_segs is None:
-            return self.match_unanchored(p, p_segs)
-
-        where = self.where
-        n_prefix_segs = len(self.prefix_segs)
-        if p_segs[0:n_prefix_segs] != self.prefix_segs:
-            return None, None
-        if self.wildcard_child:
-            if len(p_segs) <= n_prefix_segs:
-                return None, None
-            lmark_p = os.path.join('/', '/'.join(p_segs[0:n_prefix_segs+1]))
-        else:
-            lmark_p = os.path.join('/', '/'.join(self.prefix_segs))
-        if where:
-            if not where.test(lmark_p):
-                return None, None
-        return lmark_p, self.context
 
 
 def parse(cfg_lines):
@@ -136,13 +136,16 @@ def parse(cfg_lines):
         landmark_def, context = line.split(':=')
         parts = shlex.split(landmark_def)
         context = context.strip()
-        wildcard_child = False
+        wildcard_descendant = None
         if parts[0] != 'where':
             prefix = os.path.expanduser(parts[0])
             parts.pop(0)
             if prefix.endswith('/*'):
                 prefix = prefix[:-2]
-                wildcard_child = True
+                wildcard_descendant = 'one'
+            elif prefix.endswith('/**'):
+                prefix = prefix[:-3]
+                wildcard_descendant = 'rec'
         else:
             prefix = None
         where = None
@@ -159,7 +162,7 @@ def parse(cfg_lines):
                 check = WHERE_CHECKS[check_op]
                 relative = next_part()
                 where.push_cond(check, relative)
-        lmark = Landmark(prefix, wildcard_child, where, context)
+        lmark = Landmark(prefix, wildcard_descendant, where, context)
         lmark.src = line
         landmarks.append(lmark)
     return landmarks
