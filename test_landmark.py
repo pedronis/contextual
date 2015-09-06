@@ -3,38 +3,41 @@ import pytest
 from landmark import *  # noqa
 
 
-@pytest.fixture(scope="module")
-def home_and_where_and_here():
-    HOME = os.getenv('HOME')
+@pytest.fixture(scope="function")
+def home_and_where_and_here(request, tmpdir):
+    """=> home, where clause, p under home, segs(p)"""
+    request.addfinalizer(lambda: tmpdir.remove(rec=1, ignore_errors=True))
+    home = tmpdir.join('home', 'user0')
+    home.join('.bashrc').write_text(u'#', 'ascii', ensure=True)
     where = WhereClause()
     where.push_cond(check_is_non_empty, '.bashrc')
-    p = os.path.dirname(__file__)
+    p = home.join('foo', 'bar').strpath
     s = segs(p)
-    return HOME, where, p, s
+    return home.strpath, where, p, s
 
 
 def test_landmark(home_and_where_and_here):
-    HOME, where, p, s = home_and_where_and_here
+    home, where, p, s = home_and_where_and_here
 
     l = Landmark(None, None, where, 'foo')
     res = l.match(p, s)
-    assert res == (HOME, 'foo')
+    assert res == (home, 'foo')
 
-    l = Landmark(os.path.dirname(HOME), 'one', where, 'foo')
+    l = Landmark(os.path.dirname(home), 'one', where, 'foo')
     res = l.match(p, s)
-    assert res == (HOME, 'foo')
+    assert res == (home, 'foo')
 
-    l = Landmark(os.path.dirname(os.path.dirname(HOME)), 'rec', where, 'foo')
+    l = Landmark(os.path.dirname(os.path.dirname(home)), 'rec', where, 'foo')
     res = l.match(p, s)
-    assert res == (HOME, 'foo')
+    assert res == (home, 'foo')
 
-    l = Landmark(HOME, None, where, 'foo')
+    l = Landmark(home, None, where, 'foo')
     res = l.match(p, s)
-    assert res == (HOME, 'foo')
+    assert res == (home, 'foo')
 
-    l = Landmark(HOME, None, None, 'foo')
+    l = Landmark(home, None, None, 'foo')
     res = l.match(p, s)
-    assert res == (HOME, 'foo')
+    assert res == (home, 'foo')
 
     l = Landmark('/', None, None, 'foo')
     res = l.match(p, s)
@@ -42,15 +45,15 @@ def test_landmark(home_and_where_and_here):
 
 
 def test_landmark_match_shortcut(home_and_where_and_here):
-    HOME, where, p, s = home_and_where_and_here
+    home, where, p, s = home_and_where_and_here
 
-    l = Landmark(os.path.dirname(HOME), True, where, 'foo')
-    res = l.match_shortcut(os.path.basename(HOME), None)
-    assert res == (HOME, 'foo')
+    l = Landmark(os.path.dirname(home), True, where, 'foo')
+    res = l.match_shortcut(os.path.basename(home), None)
+    assert res == (home, 'foo')
 
-    l = Landmark(HOME, False, where, 'foo')
-    res = l.match_shortcut(os.path.basename(HOME), None)
-    assert res == (HOME, 'foo')
+    l = Landmark(home, False, where, 'foo')
+    res = l.match_shortcut(os.path.basename(home), None)
+    assert res == (home, 'foo')
 
 
 def test_parse():
