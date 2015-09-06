@@ -25,29 +25,29 @@ def non_empty_dot_bashrc():
 def test_landmark(home_and_here, non_empty_dot_bashrc):
     home, p, s = home_and_here
 
-    l = Landmark(None, None, non_empty_dot_bashrc, 'foo')
+    l = Landmark(None, None, non_empty_dot_bashrc, 'ctx')
     res = l.match(p, s)
-    assert res == (home, 'foo')
+    assert res == (home, 'ctx')
 
-    l = Landmark(os.path.dirname(home), 'one', non_empty_dot_bashrc, 'foo')
+    l = Landmark(os.path.dirname(home), 'one', non_empty_dot_bashrc, 'ctx')
     res = l.match(p, s)
-    assert res == (home, 'foo')
+    assert res == (home, 'ctx')
 
-    l = Landmark(os.path.dirname(os.path.dirname(home)), 'rec', non_empty_dot_bashrc, 'foo')
+    l = Landmark(os.path.dirname(os.path.dirname(home)), 'rec', non_empty_dot_bashrc, 'ctx')
     res = l.match(p, s)
-    assert res == (home, 'foo')
+    assert res == (home, 'ctx')
 
-    l = Landmark(home, None, non_empty_dot_bashrc, 'foo')
+    l = Landmark(home, None, non_empty_dot_bashrc, 'ctx')
     res = l.match(p, s)
-    assert res == (home, 'foo')
+    assert res == (home, 'ctx')
 
-    l = Landmark(home, None, None, 'foo')
+    l = Landmark(home, None, None, 'ctx')
     res = l.match(p, s)
-    assert res == (home, 'foo')
+    assert res == (home, 'ctx')
 
-    l = Landmark('/', None, None, 'foo')
+    l = Landmark('/', None, None, 'ctx')
     res = l.match(p, s)
-    assert res == ('/', 'foo')
+    assert res == ('/', 'ctx')
 
 
 @pytest.fixture(scope="function")
@@ -60,20 +60,20 @@ def hopeless_where():
 def test_landmark_no_match(home_and_here, hopeless_where):
     home, p, s = home_and_here
 
-    l = Landmark(home, False, None, 'foo')
+    l = Landmark(home, False, None, 'ctx')
     p1 = os.path.abspath(os.path.join(home, '..', 'user1'))
     res = l.match(p1, segs(p1))
     assert res == (None, None)
 
-    l = Landmark(None, None, hopeless_where, 'foo')
+    l = Landmark(None, None, hopeless_where, 'ctx')
     res = l.match(p, s)
     assert res == (None, None)
 
-    l = Landmark(os.path.dirname(home), 'one', hopeless_where, 'foo')
+    l = Landmark(os.path.dirname(home), 'one', hopeless_where, 'ctx')
     res = l.match(p, s)
     assert res == (None, None)
 
-    l = Landmark(home, 'one', None, 'foo')
+    l = Landmark(home, 'one', None, 'ctx')
     res = l.match(home, segs(home))
     assert res == (None, None)
 
@@ -81,27 +81,27 @@ def test_landmark_no_match(home_and_here, hopeless_where):
 def test_landmark_match_shortcut(home_and_here, non_empty_dot_bashrc):
     home, p, s = home_and_here
 
-    l = Landmark(os.path.dirname(home), 'one', non_empty_dot_bashrc, 'foo')
+    l = Landmark(os.path.dirname(home), 'one', non_empty_dot_bashrc, 'ctx')
     res = l.match_shortcut(os.path.basename(home), None)
-    assert res == (home, 'foo')
+    assert res == (home, 'ctx')
 
-    l = Landmark(home, None, non_empty_dot_bashrc, 'foo')
+    l = Landmark(home, None, non_empty_dot_bashrc, 'ctx')
     res = l.match_shortcut(os.path.basename(home), None)
-    assert res == (home, 'foo')
+    assert res == (home, 'ctx')
 
 
 def test_landmark_match_shortcut_no_match(home_and_here, hopeless_where):
     home, p, s = home_and_here
 
-    l = Landmark(os.path.dirname(home), 'one', None, 'foo')
+    l = Landmark(os.path.dirname(home), 'one', None, 'ctx')
     res = l.match_shortcut('user1', None)
     assert res == (None, None)
 
-    l = Landmark(home, False, None, 'foo')
+    l = Landmark(home, False, None, 'ctx')
     res = l.match_shortcut('user1', None)
     assert res == (None, None)
 
-    l = Landmark(os.path.dirname(home), 'one', hopeless_where, 'foo')
+    l = Landmark(os.path.dirname(home), 'one', hopeless_where, 'ctx')
     res = l.match_shortcut(os.path.basename(home), None)
     assert res == (None, None)
 
