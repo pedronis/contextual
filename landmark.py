@@ -104,15 +104,15 @@ class Landmark(object):
 
     def match(self, p, p_segs):
         where = self.where
-        if self.wildcard_descendant and not where:
+        if self.wildcard_descendant == 'rec' and not where:
             return None, None
+        elif where is None:
+            where = Succeed()
         n_prefix_segs = len(self.prefix_segs)
         if p_segs[0:n_prefix_segs] != self.prefix_segs:
             return None, None
         if self.wildcard_descendant is None:
             up_to = start = n_prefix_segs
-            if where is None:
-                where = Succeed()
         elif self.wildcard_descendant == 'one':
             up_to = start = n_prefix_segs+1
         elif self.wildcard_descendant == 'rec':
