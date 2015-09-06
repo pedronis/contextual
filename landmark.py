@@ -3,6 +3,7 @@ Parse directory landmark to context definitions, directory landmark matching.
 """
 import os
 import shlex
+import sys
 
 WHERE_CHECKS = {}
 
@@ -74,6 +75,10 @@ def segs(p):
     return p_segs
 
 
+class TooUnconstrained(Exception):
+    """Landmark is too unconstrained."""
+
+
 class Landmark(object):
     """Directory landmark representation and matching."""
 
@@ -83,21 +88,22 @@ class Landmark(object):
             wildcard_descendant = 'rec'
         else:
             self.prefix_segs = segs(prefix)
+        if where is None:
+            if wildcard_descendant == 'rec':
+                raise TooUnconstrained()
+            where = Succeed()
         self.wildcard_descendant = wildcard_descendant
         self.where = where
         self.context = context
 
     def match_shortcut(self, shortcut, _):
-        if self.prefix_segs is None:
-            # xxx should be ok with a where clause???
-            return None, None
         if self.wildcard_descendant:
             lmark_p = os.path.join('/', '/'.join(self.prefix_segs), shortcut)
             if not os.path.isdir(lmark_p):
                 return None, None
         else:
-            # xxxx check segs actually
-            if shortcut != self.prefix_segs[-1]:
+            shortcut_segs = segs(shortcut)
+            if shortcut_segs != self.prefix_segs[-len(shortcut_segs):]:
                 return None, None
             lmark_p = os.path.join('/', '/'.join(self.prefix_segs))
         if self.where is None or self.where.test(lmark_p):
@@ -105,15 +111,10 @@ class Landmark(object):
         return None, None
 
     def match(self, p, p_segs):
-        where = self.where
-        if self.wildcard_descendant == 'rec' and not where:
-            # xxx warning
-            return None, None
-        elif where is None:
-            where = Succeed()
         n_prefix_segs = len(self.prefix_segs)
         if p_segs[0:n_prefix_segs] != self.prefix_segs:
             return None, None
+        where = self.where
         if self.wildcard_descendant is None:
             up_to = start = n_prefix_segs
         elif self.wildcard_descendant == 'one':
@@ -125,7 +126,6 @@ class Landmark(object):
         while i >= start and i <= len(p_segs):
             lmark_p = os.path.join('/', '/'.join(p_segs[0:i]))
             if where.test(lmark_p):
-                # xxxx test False True scenarios print i, i==start, i==up_to
                 return lmark_p, self.context
             i -= 1
         return None, None
@@ -167,7 +167,11 @@ def parse(cfg_lines):
                 check = WHERE_CHECKS[check_op]
                 relative = next_part()
                 where.push_cond(check, relative)
-        lmark = Landmark(prefix, wildcard_descendant, where, context)
+        try:
+            lmark = Landmark(prefix, wildcard_descendant, where, context)
+        except TooUnconstrained:
+            print >>sys.stderr, "contextual: too unconstrained: %s" % line
+            continue
         lmark.src = line
         landmarks.append(lmark)
     return landmarks

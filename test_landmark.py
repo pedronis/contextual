@@ -4,34 +4,40 @@ from landmark import *  # noqa
 
 
 @pytest.fixture(scope="function")
-def home_and_where_and_here(request, tmpdir):
-    """=> home, where clause, p under home, segs(p)"""
+def home_and_here(request, tmpdir):
+    """=> home, p under home, segs(p)"""
     request.addfinalizer(lambda: tmpdir.remove(rec=1, ignore_errors=True))
     home = tmpdir.join('home', 'user0')
     home.join('.bashrc').write_text(u'#', 'ascii', ensure=True)
-    where = WhereClause()
-    where.push_cond(check_is_non_empty, '.bashrc')
     p = home.join('foo', 'bar').strpath
     s = segs(p)
-    return home.strpath, where, p, s
+    return home.strpath, p, s
 
 
-def test_landmark(home_and_where_and_here):
-    home, where, p, s = home_and_where_and_here
+@pytest.fixture(scope="function")
+def non_empty_dot_bashrc():
+    """Make a hopeful where clause"""
+    where = WhereClause()
+    where.push_cond(check_is_non_empty, '.bashrc')
+    return where
 
-    l = Landmark(None, None, where, 'foo')
+
+def test_landmark(home_and_here, non_empty_dot_bashrc):
+    home, p, s = home_and_here
+
+    l = Landmark(None, None, non_empty_dot_bashrc, 'foo')
     res = l.match(p, s)
     assert res == (home, 'foo')
 
-    l = Landmark(os.path.dirname(home), 'one', where, 'foo')
+    l = Landmark(os.path.dirname(home), 'one', non_empty_dot_bashrc, 'foo')
     res = l.match(p, s)
     assert res == (home, 'foo')
 
-    l = Landmark(os.path.dirname(os.path.dirname(home)), 'rec', where, 'foo')
+    l = Landmark(os.path.dirname(os.path.dirname(home)), 'rec', non_empty_dot_bashrc, 'foo')
     res = l.match(p, s)
     assert res == (home, 'foo')
 
-    l = Landmark(home, None, where, 'foo')
+    l = Landmark(home, None, non_empty_dot_bashrc, 'foo')
     res = l.match(p, s)
     assert res == (home, 'foo')
 
@@ -44,16 +50,60 @@ def test_landmark(home_and_where_and_here):
     assert res == ('/', 'foo')
 
 
-def test_landmark_match_shortcut(home_and_where_and_here):
-    home, where, p, s = home_and_where_and_here
+@pytest.fixture(scope="function")
+def hopeless_where():
+    where1 = WhereClause()
+    where1.push_cond(check_is_executable, '.non-existent-file')
+    return where1
 
-    l = Landmark(os.path.dirname(home), True, where, 'foo')
+
+def test_landmark_no_match(home_and_here, hopeless_where):
+    home, p, s = home_and_here
+
+    l = Landmark(home, False, None, 'foo')
+    p1 = os.path.abspath(os.path.join(home, '..', 'user1'))
+    res = l.match(p1, segs(p1))
+    assert res == (None, None)
+
+    l = Landmark(None, None, hopeless_where, 'foo')
+    res = l.match(p, s)
+    assert res == (None, None)
+
+    l = Landmark(os.path.dirname(home), 'one', hopeless_where, 'foo')
+    res = l.match(p, s)
+    assert res == (None, None)
+
+    l = Landmark(home, 'one', None, 'foo')
+    res = l.match(home, segs(home))
+    assert res == (None, None)
+
+
+def test_landmark_match_shortcut(home_and_here, non_empty_dot_bashrc):
+    home, p, s = home_and_here
+
+    l = Landmark(os.path.dirname(home), 'one', non_empty_dot_bashrc, 'foo')
     res = l.match_shortcut(os.path.basename(home), None)
     assert res == (home, 'foo')
 
-    l = Landmark(home, False, where, 'foo')
+    l = Landmark(home, None, non_empty_dot_bashrc, 'foo')
     res = l.match_shortcut(os.path.basename(home), None)
     assert res == (home, 'foo')
+
+
+def test_landmark_match_shortcut_no_match(home_and_here, hopeless_where):
+    home, p, s = home_and_here
+
+    l = Landmark(os.path.dirname(home), 'one', None, 'foo')
+    res = l.match_shortcut('user1', None)
+    assert res == (None, None)
+
+    l = Landmark(home, False, None, 'foo')
+    res = l.match_shortcut('user1', None)
+    assert res == (None, None)
+
+    l = Landmark(os.path.dirname(home), 'one', hopeless_where, 'foo')
+    res = l.match_shortcut(os.path.basename(home), None)
+    assert res == (None, None)
 
 
 def test_parse():
@@ -97,9 +147,12 @@ def test_parse():
     l = parse(['#test', '', '/home/pedronis := zzz'])[0]
     assert l.prefix_segs == ['home', 'pedronis']
     assert l.wildcard_descendant is None
-    assert l.where is None
+    assert isinstance(l.where, Succeed)
 
     l = parse(['#test', '', '/ := zzz'])[0]
     assert l.prefix_segs == []
     assert l.wildcard_descendant is None
-    assert l.where is None
+    assert isinstance(l.where, Succeed)
+
+    l = parse(['#test', '', '/home/** := zzz'])
+    assert len(l) == 0
