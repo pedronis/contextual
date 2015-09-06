@@ -31,15 +31,11 @@ def main(args):
     runcmd = args[2]
     shortcut = None
     trace = False
-    like = False
     if len(args) >=4 and args[3] == ':trace':
         args.pop(3)
         trace = True
     if len(args) >=4 and args[3].startswith(':'):
         shortcut = args.pop(3)
-        if shortcut.startswith(':='):
-            shortcut = ':' + shortcut[2:]
-            like = True
 
     locations = []
     if '/' in runcmd:
@@ -60,12 +56,6 @@ def main(args):
                                          [shortcut[1:]],
                                          shortcut,
                                          trace)
-        if like:
-            _, lmark_p, context = infer_context([lmark],
-                                                'unanchored',
-                                                locations,
-                                                locations,
-                                                trace)
     else:
         _, lmark_p, context = infer_context(landmarks,
                                             '',
