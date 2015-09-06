@@ -89,13 +89,15 @@ class Landmark(object):
 
     def match_shortcut(self, shortcut, _):
         if self.prefix_segs is None:
+            # xxx should be ok with a where clause???
             return None, None
         if self.wildcard_descendant:
             lmark_p = os.path.join('/', '/'.join(self.prefix_segs), shortcut)
             if not os.path.isdir(lmark_p):
                 return None, None
         else:
-            if not self.prefix_segs or shortcut != self.prefix_segs[-1]:
+            # xxxx check segs actually
+            if shortcut != self.prefix_segs[-1]:
                 return None, None
             lmark_p = os.path.join('/', '/'.join(self.prefix_segs))
         if self.where is None or self.where.test(lmark_p):
@@ -105,6 +107,7 @@ class Landmark(object):
     def match(self, p, p_segs):
         where = self.where
         if self.wildcard_descendant == 'rec' and not where:
+            # xxx warning
             return None, None
         elif where is None:
             where = Succeed()
@@ -122,6 +125,7 @@ class Landmark(object):
         while i >= start and i <= len(p_segs):
             lmark_p = os.path.join('/', '/'.join(p_segs[0:i]))
             if where.test(lmark_p):
+                # xxxx test False True scenarios print i, i==start, i==up_to
                 return lmark_p, self.context
             i -= 1
         return None, None
