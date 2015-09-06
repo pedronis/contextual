@@ -56,6 +56,7 @@ class WhereClause(object):
                 return False
         return True
 
+
 class Succeed(object):
     """Always test true."""
 
