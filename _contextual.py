@@ -1,13 +1,13 @@
 #!/usr/bin/python
 import sys, os, subprocess
 
-import where
+import landmark
 
 def infer_context(landmarks, how, locations, hint, trace):
     match_kind = how[:1]
-    match = getattr(where.Landmark, ('match_'+how).strip('_'))
+    match = getattr(landmark.Landmark, ('match_'+how).strip('_'))
     for location in locations:
-        location_segs = where.segs(location)
+        location_segs = landmark.segs(location)
         for lmark in landmarks:
             lmark_p, context = match(lmark, location, location_segs)
             if lmark_p is not None:
@@ -27,7 +27,7 @@ def infer_context(landmarks, how, locations, hint, trace):
 
 def main(args):
     args = list(args)
-    landmarks = where.parse(open(args[1]))
+    landmarks = landmark.parse(open(args[1]))
     runcmd = args[2]
     shortcut = None
     trace = False
