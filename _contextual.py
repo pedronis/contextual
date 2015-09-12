@@ -65,15 +65,6 @@ def main(args):
 
     context = context.format(*matched, ctx_dir=matched[0])
 
-    if context.startswith('!'):
-        p = subprocess.Popen(context[1:], shell=True, stdout=subprocess.PIPE)
-        out = p.communicate()[0]
-        if p.returncode != 0:
-            print >>sys.stderr, "failed running: %s" % context
-            print >>sys.stdout, "exit 1"
-            sys.exit(1)
-        context = out
-
     if trace:
         print >>sys.stderr, "CONTEXT => %s" % context
         print >>sys.stdout, "exit 0"
