@@ -104,6 +104,28 @@ In the example the full process gives ``contextual`` to invoke::
 My Setup
 ++++++++
 
+``~/bin`` in ``PATH`` and symlinks from ``~/bin`` to the ``contextual``
+and ``_contextual.py`` scripts in a checkout of ``contextual``.
+
+The following aliases::
+
+  alias +='contextual ~/.contextual'
+  alias +go='+ go'
+  alias +py.test='+ py.test'
+  alias +python='+ python'
+
+and ``~/.contextual`` containing::
+
+  ~/repos/* := source ~/repos/homeconf/repocontext {ctx_dir}
+  ~/go-ws/* := export GOPATH=~/go-ws
+  / :=
+
+the first rule shows that more complicated contexts can be setup by sourcing shell scripts whose behavior may depend on the `context dir`.
+
+The last rule avoids getting `contextual: failed to infer context:
+...` errors when using the aliases with `start directories` not
+matching any rule. A matter of personal taste.
+
 Debugging Rules
 +++++++++++++++
 
@@ -112,4 +134,9 @@ Hacking
 
 License
 +++++++
+
+Copyright 2008-2015 Samuele Pedroni
+
+``contextual`` is distributed under the terms of the GNU General
+Public License (GPL) version 3 or later. See COPYING.
 
