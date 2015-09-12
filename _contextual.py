@@ -9,13 +9,13 @@ def infer_context(landmarks, how, locations, hint, trace):
     for location in locations:
         location_segs = landmark.segs(location)
         for lmark in landmarks:
-            lmark_p, context = match(lmark, location, location_segs)
-            if lmark_p is not None:
+            matched, context = match(lmark, location, location_segs)
+            if matched is not None:
                 if trace:
                     print >>sys.stderr, "%s ~%s~ %s => yes" % (location,
                                                                match_kind,
                                                                lmark.src)
-                return lmark, lmark_p, context
+                return lmark, matched, context
             if trace:
                 print >>sys.stderr, "%s ~%s~ %s => no" % (location,
                                                           match_kind,
@@ -51,19 +51,19 @@ def main(args):
     locations.append(os.getcwd())
 
     if shortcut:
-        lmark, lmark_p, context = infer_context(landmarks,
-                                         'shortcut',
-                                         [shortcut[1:]],
-                                         shortcut,
-                                         trace)
+        lmark, matched, context = infer_context(landmarks,
+                                                'shortcut',
+                                                [shortcut[1:]],
+                                                shortcut,
+                                                trace)
     else:
-        _, lmark_p, context = infer_context(landmarks,
+        _, matched, context = infer_context(landmarks,
                                             '',
                                             locations,
                                             locations,
                                             trace)
 
-    context = context % {'runcmd': runcmd, 'where': lmark_p}
+    context = context.format(*matched, ctx_dir=matched[0])
 
     if context.startswith('!'):
         p = subprocess.Popen(context[1:], shell=True, stdout=subprocess.PIPE)

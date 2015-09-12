@@ -9,58 +9,85 @@ def home_and_here(request, tmpdir):
     request.addfinalizer(lambda: tmpdir.remove(rec=1, ignore_errors=True))
     home = tmpdir.join('home', 'user0')
     home.join('.bashrc').write_text(u'#', 'ascii', ensure=True)
+    home.join('.bashrc').chmod(0700)
     p = home.join('foo', 'bar').strpath
+    home.join('x').ensure_dir()
+    home.join('y/z').ensure_dir()
     s = segs(p)
     return home.strpath, p, s
 
 
 @pytest.fixture(scope="function")
-def non_empty_dot_bashrc():
+def non_empty_and_executable_dot_bashrc():
     """Make a hopeful where clause"""
     where = WhereClause()
     where.push_cond(check_is_non_empty, '.bashrc')
+    where.push_cond(check_is_executable, '{1}')
     return where
 
 
-def test_landmark(home_and_here, non_empty_dot_bashrc):
+def test_landmark(home_and_here, non_empty_and_executable_dot_bashrc):
     home, p, s = home_and_here
+    hit = os.path.join(home, '.bashrc')
 
-    l = Landmark(None, None, non_empty_dot_bashrc, 'ctx')
+    l = Landmark(None, None, non_empty_and_executable_dot_bashrc, 'ctx')
     res = l.match(p, s)
-    assert res == (home, 'ctx')
+    assert res == ([home, hit, hit], 'ctx')
 
-    l = Landmark(os.path.dirname(home), 'one', non_empty_dot_bashrc, 'ctx')
+    l = Landmark(os.path.dirname(home), 'one', non_empty_and_executable_dot_bashrc, 'ctx')
     res = l.match(p, s)
-    assert res == (home, 'ctx')
+    assert res == ([home, hit, hit], 'ctx')
 
-    l = Landmark(os.path.dirname(os.path.dirname(home)), 'rec', non_empty_dot_bashrc, 'ctx')
+    l = Landmark(os.path.dirname(os.path.dirname(home)), 'rec',
+                 non_empty_and_executable_dot_bashrc, 'ctx')
     res = l.match(p, s)
-    assert res == (home, 'ctx')
+    assert res == ([home, hit, hit], 'ctx')
 
-    l = Landmark(home, None, non_empty_dot_bashrc, 'ctx')
+    l = Landmark(home, None, non_empty_and_executable_dot_bashrc, 'ctx')
     res = l.match(p, s)
-    assert res == (home, 'ctx')
+    assert res == ([home, hit, hit], 'ctx')
 
     l = Landmark(home, None, None, 'ctx')
     res = l.match(p, s)
-    assert res == (home, 'ctx')
+    assert res == ([home], 'ctx')
 
     l = Landmark('/', None, None, 'ctx')
     res = l.match(p, s)
-    assert res == ('/', 'ctx')
+    assert res == (['/'], 'ctx')
+
+
+def test_landmark_backtrack(home_and_here):
+    home, p, s = home_and_here
+
+    where = WhereClause()
+    where.push_cond(os.path.isdir, '*')
+    where.push_cond(os.path.isdir, '{1}/z')
+
+    l = Landmark(home, 'rec', where, 'ctx')
+    res = l.match(p, s)
+    assert res == ([home, os.path.join(home, 'y'), os.path.join(home, 'y/z')], 'ctx')
+
+    nowhere = WhereClause()
+    nowhere.push_cond(os.path.isdir, '*')
+    nowhere.push_cond(check_is_non_empty, '{1}/z')
+
+    l = Landmark(home, 'rec', nowhere, 'ctx')
+    res = l.match(p, s)
+    assert res == (None, None)
 
 
 @pytest.fixture(scope="function")
 def hopeless_where():
+    """Make a hopeless where clause"""
     where1 = WhereClause()
-    where1.push_cond(check_is_executable, '.non-existent-file')
+    where1.push_cond(lambda p: True, '.non-existent-file')
     return where1
 
 
 def test_landmark_no_match(home_and_here, hopeless_where):
     home, p, s = home_and_here
 
-    l = Landmark(home, False, None, 'ctx')
+    l = Landmark(home, None, None, 'ctx')
     p1 = os.path.abspath(os.path.join(home, '..', 'user1'))
     res = l.match(p1, segs(p1))
     assert res == (None, None)
@@ -78,16 +105,21 @@ def test_landmark_no_match(home_and_here, hopeless_where):
     assert res == (None, None)
 
 
-def test_landmark_match_shortcut(home_and_here, non_empty_dot_bashrc):
+def test_landmark_match_shortcut(home_and_here, non_empty_and_executable_dot_bashrc):
     home, p, s = home_and_here
+    hit = os.path.join(home, '.bashrc')
 
-    l = Landmark(os.path.dirname(home), 'one', non_empty_dot_bashrc, 'ctx')
+    l = Landmark(os.path.dirname(home), 'one', non_empty_and_executable_dot_bashrc, 'ctx')
     res = l.match_shortcut(os.path.basename(home), None)
-    assert res == (home, 'ctx')
+    assert res == ([home, hit, hit], 'ctx')
 
-    l = Landmark(home, None, non_empty_dot_bashrc, 'ctx')
+    l = Landmark(os.path.dirname(home), 'one', None, 'ctx')
     res = l.match_shortcut(os.path.basename(home), None)
-    assert res == (home, 'ctx')
+    assert res == ([home], 'ctx')
+
+    l = Landmark(home, None, non_empty_and_executable_dot_bashrc, 'ctx')
+    res = l.match_shortcut(os.path.basename(home), None)
+    assert res == ([home, hit, hit], 'ctx')
 
 
 def test_landmark_match_shortcut_no_match(home_and_here, hopeless_where):
@@ -97,7 +129,7 @@ def test_landmark_match_shortcut_no_match(home_and_here, hopeless_where):
     res = l.match_shortcut('user1', None)
     assert res == (None, None)
 
-    l = Landmark(home, False, None, 'ctx')
+    l = Landmark(home, None, None, 'ctx')
     res = l.match_shortcut('user1', None)
     assert res == (None, None)
 
@@ -156,3 +188,14 @@ def test_parse():
 
     l = parse(['#test', '', '/home/** := zzz'])
     assert len(l) == 0
+
+
+def test_placeholder_error(capsys):
+    rule1 = 'where -e {2}/x := ctx'
+    l = parse([rule1])[0]
+    res = l.match('/', segs('/'))
+    assert res == (None, None)
+    assert capsys.readouterr() == (
+        '',
+        'contextual: [rule: {}] {} has unbound/unknown placeholder\n'.format(rule1, '{2}/x')
+    )

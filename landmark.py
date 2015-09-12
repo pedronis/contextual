@@ -1,6 +1,7 @@
 """
 Parse directory landmark to context definitions, directory landmark matching.
 """
+import glob
 import os
 import shlex
 import sys
@@ -30,20 +31,30 @@ def check_is_executable(p):
     return os.access(p, os.X_OK)
 
 
+class WhereError(Exception):
+    """Error while fulfilling where clause"""
+
+
 class WhereCond(object):
-    """Represents and tests one directory landmark condition."""
+    """Represents and tests for one directory landmark condition."""
 
     def __init__(self, check, relative):
         self.check = check
         self.relative = relative
 
-    def test(self, p):
-        p = os.path.join(p, self.relative)
-        return self.check(p)
+    def matching(self, matched):
+        p = matched[0]
+        try:
+            rel = self.relative.format(*matched, ctxdir=p)
+        except (IndexError, KeyError):
+            raise WhereError("{} has unbound/unknown placeholder".format(self.relative))
+        for cand in glob.glob(os.path.join(p, rel)):
+            if self.check(cand):
+                yield cand
 
 
 class WhereClause(object):
-    """Represent and tests all directory landmark conditions."""
+    """Represent and tests for matches all directory landmark conditions."""
 
     def __init__(self):
         self.conds = []
@@ -51,18 +62,25 @@ class WhereClause(object):
     def push_cond(self, check, relative):
         self.conds.append(WhereCond(check, relative))
 
+    def find_matches(self, cond_index, matched):
+        if cond_index >= len(self.conds):
+            return matched
+        cond = self.conds[cond_index]
+        for cand in cond.matching(matched):
+            got = self.find_matches(cond_index+1, matched+[cand])
+            if got:
+                return got
+        return None
+
     def test(self, p):
-        for cond in self.conds:
-            if not cond.test(p):
-                return False
-        return True
+        return self.find_matches(0, [p])
 
 
 class Succeed(object):
     """Always test true."""
 
     def test(self, p):
-        return True
+        return [p]
 
 
 def segs(p):
@@ -96,6 +114,13 @@ class Landmark(object):
         self.where = where
         self.context = context
 
+    def _test_where(self, p):
+        try:
+            return self.where.test(p)
+        except WhereError as e:
+            print >>sys.stderr, "contextual: [rule: %s] %s" % (self.src, e)
+            return None
+
     def match_shortcut(self, shortcut, _):
         if self.wildcard_descendant:
             lmark_p = os.path.join('/', '/'.join(self.prefix_segs), shortcut)
@@ -106,15 +131,15 @@ class Landmark(object):
             if shortcut_segs != self.prefix_segs[-len(shortcut_segs):]:
                 return None, None
             lmark_p = os.path.join('/', '/'.join(self.prefix_segs))
-        if self.where is None or self.where.test(lmark_p):
-            return lmark_p, self.context
+        matched = self._test_where(lmark_p)
+        if matched:
+            return matched, self.context
         return None, None
 
     def match(self, p, p_segs):
         n_prefix_segs = len(self.prefix_segs)
         if p_segs[0:n_prefix_segs] != self.prefix_segs:
             return None, None
-        where = self.where
         if self.wildcard_descendant is None:
             up_to = start = n_prefix_segs
         elif self.wildcard_descendant == 'one':
@@ -125,8 +150,9 @@ class Landmark(object):
         i = up_to
         while i >= start and i <= len(p_segs):
             lmark_p = os.path.join('/', '/'.join(p_segs[0:i]))
-            if where.test(lmark_p):
-                return lmark_p, self.context
+            matched = self._test_where(lmark_p)
+            if matched:
+                return matched, self.context
             i -= 1
         return None, None
 
