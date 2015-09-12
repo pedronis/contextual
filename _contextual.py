@@ -1,7 +1,9 @@
 #!/usr/bin/python
-import sys, os, subprocess
+import os
+import sys
 
 import landmark
+
 
 def infer_context(landmarks, locations, trace):
     for location in locations:
@@ -19,12 +21,13 @@ def infer_context(landmarks, locations, trace):
     print >>sys.stdout, "exit 1"
     sys.exit(1)
 
+
 def main(args):
     args = list(args)
     landmarks = landmark.parse(open(args[0]))
     runcmd = args[1]
     trace = False
-    if len(args) >=3 and args[2] == ':trace':
+    if len(args) >= 3 and args[2] == ':trace':
         args.pop(2)
         trace = True
 
