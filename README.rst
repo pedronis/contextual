@@ -39,35 +39,35 @@ line, of the form::
 ``contextual`` will consider in order the current working directory
 first as indicated by the environment variable ``PWD`` then as result
 of ``getcwd`` (which can be different in the presence of symlinks) and
-find matching rules for these `start directories`.
+find matching rules for these *start directories*.
 
-`ctx-path-prefix` values undergo ``~`` user expansion before being
+*ctx-path-prefix* values undergo ``~`` user expansion before being
 used.
 
-A matching rule has `ctx-path-prefix` that is a prefix of the `start
-directory`. Then it has, if `wildcard-descendant` is omitted in the
-rule, `start directory` itself or, if `wildcard-descendant` is ``/*``,
-one direct subdirectory of `ctx-path-prefix` and parent of `start
-directory`, or, if `wildcard-descendant` is ``/**``, one parent of
-`start directory` descendant subdirectory of `ctx-path-prefix`
-(included) fulfilling all optional `landmark-cond landmark-path` pairs. The
-fulfilling directory is the `context directory` and for the ``/**`` case
-it is the first directory fulfilling walking up from the `start
-directory` to `ctx-path-prefix` included.
+A matching rule has *ctx-path-prefix* that is a prefix of the *start
+directory*. Then it has, if *wildcard-descendant* is omitted in the
+rule, *start directory* itself or, if *wildcard-descendant* is ``/*``,
+one direct subdirectory of *ctx-path-prefix* and parent of *start
+directory*, or, if *wildcard-descendant* is ``/**``, one parent of
+*start directory* descendant subdirectory of *ctx-path-prefix*
+(included) fulfilling all optional *landmark-cond landmark-path* pairs. The
+fulfilling directory is the *context directory* and for the ``/**`` case
+it is the first directory fulfilling walking up from the *start
+directory* to *ctx-path-prefix* included.
 
-In the example ``~/projs/proj1/subdir`` is the `start directory`, the
-rule has ``/**`` as `wildcard-descendant` so `context directory`
+In the example ``~/projs/proj1/subdir`` is the *start directory*, the
+rule has ``/**`` as *wildcard-descendant* so *context directory*
 candidates are in order::
 
   ~/projs/proj1/subdir  ~/projs/proj1  ~/projs
 
-Fulfilling the pairs `landmark-cond landmark-path` for a candidate
-`context directory` means ``test`` `landmark-cond` `landmark-path` is
-true for each pair usually interpreting `landmark-path` relatively to
-the candidate.  `landmark-path` can contain simple globbing (``*?``)
+Fulfilling the pairs *landmark-cond landmark-path* for a candidate
+*context directory* means ``test`` *landmark-cond* *landmark-path* is
+true for each pair usually interpreting *landmark-path* relatively to
+the candidate.  *landmark-path* can contain simple globbing (``*?``)
 and they can contain placeholders ``{#}`` (``#`` is a index starting
 from 0) or ``{ctx_dir}``. ``{0}`` and ``{ctx_dir}`` both evaluate to
-the candidate `context directory` while ``{1}``, ``{2}``,...  evaluate
+the candidate *context directory* while ``{1}``, ``{2}``,...  evaluate
 to a condition fulfilling file system entry for the corresponding
 landmark condition pair, when they are numbered from 1 starting from
 the left. To deal with globbing and placeholders combined,
@@ -82,20 +82,20 @@ and is a file. Also::
   {0} = {ctx_dir} = <HOME>/projs/proj1
   {1} = <HOME>/projs/proj1/venv/bin/activate
 
-For each `start directory` in order ``contextual`` will consider rules
-top to bottom and will evaluate `context` of a matching rule using the
+For each *start directory* in order ``contextual`` will consider rules
+top to bottom and will evaluate *context* of a matching rule using the
 same placeholder definitions as for the conditions. In this process a
 rule is ignored once it has been matching.
 
-In the example the evaluated `context` of the matched rule becomes::
+In the example the evaluated *context* of the matched rule becomes::
 
   source <HOME>/projs/proj1/venv/bin/activate
 
-Finally ``contextual`` will apply the list of evaluated `context`
+Finally ``contextual`` will apply the list of evaluated *context*
 values from matching rules in reverse order before invoking the given
 command. This means the effect (usually environment changes) of the
-`context` of first-matched rules will take precedence over later
-matching rule `context`.
+*context* of first-matched rules will take precedence over later
+matching rule *context*.
 
 In the example the full process gives ``contextual`` to invoke::
 
@@ -120,10 +120,10 @@ and ``~/.contextual`` containing::
   ~/go-ws/* := export GOPATH=~/go-ws
   / :=
 
-the first rule shows that more complicated contexts can be setup by sourcing shell scripts whose behavior may depend on the `context dir`.
+the first rule shows that more complicated contexts can be setup by sourcing shell scripts whose behavior may depend on the *context dir*.
 
-The last rule avoids getting `contextual: failed to infer context:
-...` errors when using the aliases with `start directories` not
+The last rule avoids getting *contextual: failed to infer context:
+...* errors when using the aliases with *start directories* not
 matching any rule. A matter of personal taste.
 
 Debugging Rules
