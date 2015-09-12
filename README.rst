@@ -95,10 +95,10 @@ and is a file. Also::
   {0} = {ctx_dir} = <HOME>/projs/proj1
   {1} = <HOME>/projs/proj1/venv/bin/activate
 
-For each *start directory* in order *contextual* will consider rules
+For all *start directory* in order *contextual* will consider rules
 top to bottom and will evaluate *context* of a matching rule using the
 same placeholder definitions as for the conditions. In this process a
-rule is ignored once it has been matching.
+rule can match exactly once and is ignored once it has been matching.
 
 In the example the evaluated *context* of the matched rule becomes::
 
