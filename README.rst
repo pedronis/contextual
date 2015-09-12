@@ -45,17 +45,22 @@ find matching rules for these *start directories*.
 used.
 
 A matching rule has *ctx-path-prefix* that is a prefix of the *start
-directory*. Then it has, if *wildcard-descendant* is omitted in the
-rule, *start directory* itself or, if *wildcard-descendant* is ``/*``,
-one direct subdirectory of *ctx-path-prefix* and parent of *start
-directory*, or, if *wildcard-descendant* is ``/**``, one parent of
-*start directory* descendant subdirectory of *ctx-path-prefix*
-(included) fulfilling all optional *landmark-cond landmark-path* pairs. The
-fulfilling directory is the *context directory* and for the ``/**`` case
-it is the first directory fulfilling walking up from the *start
-directory* to *ctx-path-prefix* included.
+directory*. Then it has,
 
-In the example ``~/projs/proj1/subdir`` is the *start directory*, the
+- if *wildcard-descendant* is omitted in the rule, *start directory*
+  itself or,
+- if *wildcard-descendant* is ``/*``, one direct subdirectory of
+  *ctx-path-prefix* and parent of *start directory*, or,
+- if *wildcard-descendant* is ``/**``, one parent of *start directory*
+  descendant subdirectory of *ctx-path-prefix* (included)
+
+fulfilling all optional *landmark-cond landmark-path* pairs.
+
+The fulfilling directory is the *context directory* and for the
+``/**`` case it is the first directory fulfilling walking up from the
+*start directory* to *ctx-path-prefix* included.
+
+In the example, ``~/projs/proj1/subdir`` is the *start directory*, the
 rule has ``/**`` as *wildcard-descendant* so *context directory*
 candidates are in order::
 
@@ -64,18 +69,26 @@ candidates are in order::
 Fulfilling the pairs *landmark-cond landmark-path* for a candidate
 *context directory* means ``test`` *landmark-cond* *landmark-path* is
 true for each pair usually interpreting *landmark-path* relatively to
-the candidate.  *landmark-path* can contain simple globbing (``*?``)
-and they can contain placeholders ``{#}`` (``#`` is a index starting
-from 0) or ``{ctx_dir}``. ``{0}`` and ``{ctx_dir}`` both evaluate to
-the candidate *context directory* while ``{1}``, ``{2}``,...  evaluate
-to a condition fulfilling file system entry for the corresponding
-landmark condition pair, when they are numbered from 1 starting from
-the left. To deal with globbing and placeholders combined,
-*contextual* tries to fulfill conditions from left to right with
-backtracking going through candidate file system entries for each
-condition as produced by globbing.
+the candidate.
 
-In the example candidate ``~/projs/proj1`` fulfills ``-f
+
+*landmark-path* can contain simple globbing (``*?``) and they can
+contain placeholders ``{ctx_dir}`` or ``{#}`` (where ``#`` is a index starting from 0):
+
+``{0}`` and ``{ctx_dir}``
+  both evaluate to the candidate *context directory*
+
+``{1}``, ``{2}``, ...
+  each evaluate to a file system entry fullfilling the landmark
+  condition pair with that index, with the pairs numbered from 1
+  starting from the left.
+
+To deal with globbing and placeholders combined, *contextual* tries to
+fulfill conditions from left to right with backtracking going through
+candidate file system entries for each condition as produced by
+globbing.
+
+In the example, candidate ``~/projs/proj1`` fulfills ``-f
 */bin/activate`` because ``~/projs/proj1/venv/bin/activate`` exists
 and is a file. Also::
 
