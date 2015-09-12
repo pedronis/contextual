@@ -19,12 +19,29 @@ def test_match(home_and_projs, monkeypatch):
     home, a, b, p2p1 = home_and_projs
     conf = u"""
 {} := PROJ=1
-""".format(a.dirpath().strpath, b.dirpath().strpath)
+""".format(a.dirpath().strpath)
     confp = home.join('ctx.conf')
     confp.write_text(conf, encoding='ascii')
     monkeypatch.chdir(a.strpath)
     monkeypatch.setenv('PWD', a.strpath)
     main([confp.strpath, 'cmd'])
+
+
+def test_no_match(home_and_projs, monkeypatch, capsys):
+    home, a, b, p2p1 = home_and_projs
+    conf = u"""
+{} := PROJ=1
+""".format(a.dirpath().strpath)
+    confp = home.join('ctx.conf')
+    confp.write_text(conf, encoding='ascii')
+    monkeypatch.chdir(b.strpath)
+    monkeypatch.setenv('PWD', b.strpath)
+    with pytest.raises(SystemExit) as exit_info:
+        main([confp.strpath, 'cmd'])
+    assert exit_info.value.code == 1
+    out, err = capsys.readouterr()
+    assert out == 'exit 1\n'
+    assert err.startswith('contextual: failed to infer context:')
 
 
 def test_diverged_PWD(home_and_projs, monkeypatch):

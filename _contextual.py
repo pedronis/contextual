@@ -16,10 +16,7 @@ def infer_context(landmarks, locations, trace):
                 return matched, context
             if trace:
                 print >>sys.stderr, "%s ~ %s => no" % (location, lmark.src)
-
-    print >>sys.stderr, "failed to infer context: %s" % locations
-    print >>sys.stdout, "exit 1"
-    sys.exit(1)
+    return None, None
 
 
 def main(args):
@@ -40,6 +37,11 @@ def main(args):
     locations.append(os.getcwd())
 
     matched, context = infer_context(landmarks, locations, trace)
+
+    if not matched:
+        print >>sys.stderr, "contextual: failed to infer context: %s" % locations
+        print >>sys.stdout, "exit 1"
+        sys.exit(1)
 
     context = context.format(*matched, ctx_dir=matched[0])
 
