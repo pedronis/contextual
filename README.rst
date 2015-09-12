@@ -107,8 +107,8 @@ In the example the evaluated *context* of the matched rule becomes::
 Finally *contextual* will apply the list of evaluated *context*
 values from matching rules in reverse order before invoking the given
 command. This means the effect (usually environment changes) of the
-*context* of first-matched rules will take precedence over later
-matching rule *context*.
+*context* of rules matched earlier will take precedence over the one
+from rules matched later.
 
 In the example the full process gives *contextual* to invoke::
 
