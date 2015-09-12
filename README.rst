@@ -122,8 +122,8 @@ and ``~/.contextual`` containing::
 
 the first rule shows that more complicated contexts can be setup by sourcing shell scripts whose behavior may depend on the *context dir*.
 
-The last rule avoids getting *contextual: failed to infer context:
-...* errors when using the aliases with *start directories* not
+The last rule avoids getting ``contextual: failed to infer context:
+...`` errors when using the aliases with *start directories* not
 matching any rule. A matter of personal taste.
 
 Debugging Rules
