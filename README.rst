@@ -124,7 +124,7 @@ the first rule shows that more complicated contexts can be setup by sourcing she
 
 The last rule avoids getting ``contextual: failed to infer context:
 ...`` errors when using the aliases with *start directories* not
-matching any rule. A matter of personal taste.
+matching any rule. A matter of personal preference.
 
 Debugging Rules
 +++++++++++++++
