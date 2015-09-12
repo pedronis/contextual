@@ -1,7 +1,7 @@
 contextual: providing context for shell command invocations
 ===========================================================
 
-`contextual` is a utility that given the current working directory walks
+`contextual`:title: is a utility that given the current working directory walks
 the tree to find relevant context(s), based on path prefixes and
 landmark conditions (simple ``test`` like checks), to apply before invoking
 the given command. It takes a configuration file with rules and the
