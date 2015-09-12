@@ -1,7 +1,7 @@
 contextual: providing context for shell command invocations
 ===========================================================
 
-`contextual`:title: is a utility that given the current working directory walks
+*contextual* is a utility that given the current working directory walks
 the tree to find relevant context(s), based on path prefixes and
 landmark conditions (simple ``test`` like checks), to apply before invoking
 the given command. It takes a configuration file with rules and the
@@ -28,7 +28,7 @@ will actually invoke in a subshell::
 Rules
 +++++
 
-A `contextual` configuration file contains context rules, one per
+A *contextual* configuration file contains context rules, one per
 line, of the form::
 
   [ctx-path-prefix[wildcard-descendant]] ["where" [landmark-cond landmark-path]*] ":=" context
@@ -36,7 +36,7 @@ line, of the form::
   wildcard-descendant =  "/*" | "/**"
   landmark-cond = "-e" | "-f" | "-d" | "-x"
 
-`contextual` will consider in order the current working directory
+*contextual* will consider in order the current working directory
 first as indicated by the environment variable ``PWD`` then as result
 of ``getcwd`` (which can be different in the presence of symlinks) and
 find matching rules for these *start directories*.
@@ -71,7 +71,7 @@ the candidate *context directory* while ``{1}``, ``{2}``,...  evaluate
 to a condition fulfilling file system entry for the corresponding
 landmark condition pair, when they are numbered from 1 starting from
 the left. To deal with globbing and placeholders combined,
-`contextual` tries to fulfill conditions from left to right with
+*contextual* tries to fulfill conditions from left to right with
 backtracking going through candidate file system entries for each
 condition as produced by globbing.
 
@@ -82,7 +82,7 @@ and is a file. Also::
   {0} = {ctx_dir} = <HOME>/projs/proj1
   {1} = <HOME>/projs/proj1/venv/bin/activate
 
-For each *start directory* in order `contextual` will consider rules
+For each *start directory* in order *contextual* will consider rules
 top to bottom and will evaluate *context* of a matching rule using the
 same placeholder definitions as for the conditions. In this process a
 rule is ignored once it has been matching.
@@ -91,13 +91,13 @@ In the example the evaluated *context* of the matched rule becomes::
 
   source <HOME>/projs/proj1/venv/bin/activate
 
-Finally `contextual` will apply the list of evaluated *context*
+Finally *contextual* will apply the list of evaluated *context*
 values from matching rules in reverse order before invoking the given
 command. This means the effect (usually environment changes) of the
 *context* of first-matched rules will take precedence over later
 matching rule *context*.
 
-In the example the full process gives `contextual` to invoke::
+In the example the full process gives *contextual* to invoke::
 
   source <HOME>/projs/proj1/venv/bin/activate ; python m.py
 
@@ -105,7 +105,7 @@ My Setup
 ++++++++
 
 ``~/bin`` in ``PATH`` and symlinks from ``~/bin`` to the ``contextual``
-and ``_contextual.py`` scripts in a checkout of `contextual`.
+and ``_contextual.py`` scripts in a checkout of *contextual*.
 
 The following aliases::
 
@@ -137,6 +137,6 @@ License
 
 Copyright 2008-2015 Samuele Pedroni
 
-`contextual` is distributed under the terms of the GNU General
+*contextual* is distributed under the terms of the GNU General
 Public License (GPL) version 3 or later. See COPYING.
 
