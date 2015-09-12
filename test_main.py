@@ -24,7 +24,7 @@ def test_match(home_and_projs, monkeypatch):
     confp.write_text(conf, encoding='ascii')
     monkeypatch.chdir(a.strpath)
     monkeypatch.setenv('PWD', a.strpath)
-    main(['_', confp.strpath, 'cmd'])
+    main([confp.strpath, 'cmd'])
 
 
 def test_diverged_PWD(home_and_projs, monkeypatch):
@@ -37,4 +37,4 @@ def test_diverged_PWD(home_and_projs, monkeypatch):
     confp.write_text(conf, encoding='ascii')
     monkeypatch.chdir(p2p1.strpath)
     monkeypatch.setenv('PWD', p2p1.strpath)
-    main(['_', confp.strpath, 'cmd'])
+    main([confp.strpath, 'cmd'])
