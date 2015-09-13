@@ -47,7 +47,7 @@ class WhereCond(object):
         try:
             rel = self.relative.format(*matched, ctxdir=p)
         except (IndexError, KeyError):
-            raise WhereError("{} has unbound/unknown placeholder".format(self.relative))
+            raise WhereError("{!r} has unbound/unknown placeholder".format(self.relative))
         for cand in glob.glob(os.path.join(p, rel)):
             if self.check(cand):
                 yield cand

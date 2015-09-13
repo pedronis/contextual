@@ -56,7 +56,10 @@ def main(args):
     contexts = []
     # reverse so that early rules context effects have precedence
     for matched, context in reversed(context_pairs):
-        contexts.append(context.format(*matched, ctx_dir=matched[0]))
+        try:
+            contexts.append(context.format(*matched, ctx_dir=matched[0]))
+        except (IndexError, KeyError):
+            print >>sys.stderr, 'contextual: {!r} has unbound/unknown placeholder'.format(context)
     total_context = ';'.join(contexts)
 
     if trace:

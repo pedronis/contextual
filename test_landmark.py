@@ -197,5 +197,5 @@ def test_placeholder_error(capsys):
     assert res == (None, None)
     assert capsys.readouterr() == (
         '',
-        'contextual: [rule: {}] {} has unbound/unknown placeholder\n'.format(rule1, '{2}/x')
+        'contextual: [rule: {}] {!r} has unbound/unknown placeholder\n'.format(rule1, '{2}/x')
     )
