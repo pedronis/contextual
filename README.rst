@@ -58,7 +58,8 @@ fulfilling all optional *landmark-cond landmark-path* pairs.
 
 The fulfilling directory is the *context directory* and for the
 ``/**`` case it is the first directory fulfilling walking up from the
-*start directory* to *ctx-path-prefix* included.
+*start directory* to *ctx-path-prefix* included. Further a rule with
+*wildcard-descendant* ``/**`` must have a ``where`` clause.
 
 In the example, ``~/projs/proj1/subdir`` is the *start directory*, the
 rule has ``/**`` as *wildcard-descendant* so *context directory*
