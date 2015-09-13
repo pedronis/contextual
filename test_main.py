@@ -73,3 +73,18 @@ def test_diverged_PWD(home_and_projs, monkeypatch, capsys):
     main([confp.strpath, 'cmd'])
     out, err = capsys.readouterr()
     assert out == 'PROJ=1;PROJ=2\n'
+
+
+def test_consider_command_path(home_and_projs, monkeypatch, capsys):
+    home, a, b, p2p1 = home_and_projs
+    conf = u"""
+{} := PROJ=1
+{} := PROJ=2
+""".format(a.dirpath().strpath, b.dirpath().strpath)
+    confp = home.join('ctx.conf')
+    confp.write_text(conf, encoding='ascii')
+    monkeypatch.chdir(a.strpath)
+    monkeypatch.setenv('PWD', a.strpath)
+    main([confp.strpath, b.join('cmd').strpath])
+    out, err = capsys.readouterr()
+    assert out == 'PROJ=1;PROJ=2\n'

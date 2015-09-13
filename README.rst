@@ -39,7 +39,9 @@ line, of the form::
 *contextual* will consider in order the current working directory
 first as indicated by the environment variable ``PWD`` then as result
 of ``getcwd`` (which can be different in the presence of symlinks) and
-find matching rules for these *start directories*.
+find matching rules for these *start directories*. If the given
+command has a path part (``/`` in it) its absolute form will also be
+used as a *start directory* and before the working directory variants.
 
 *ctx-path-prefix* values undergo ``~`` user expansion before being
 used.
