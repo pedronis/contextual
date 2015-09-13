@@ -5,18 +5,28 @@ import sys
 import landmark
 
 
-def infer_context(landmarks, locations, trace):
+def infer_contexts(landmarks, locations, trace):
+    context_pairs = []
+    unmatched_landmarks = landmarks[:]
     for location in locations:
+        if trace:
+            print >>sys.stderr, "start-dir: %s" % location
         location_segs = landmark.segs(location)
-        for lmark in landmarks:
+        # use a rule only once
+        unmatched_landmarks2 = []
+        for lmark in unmatched_landmarks:
             matched, context = lmark.match(location, location_segs)
-            if matched is not None:
+            if matched:
                 if trace:
-                    print >>sys.stderr, "%s ~ %s => yes" % (location, lmark.src)
-                return matched, context
-            if trace:
-                print >>sys.stderr, "%s ~ %s => no" % (location, lmark.src)
-    return None, None
+                    print >>sys.stderr, "%s ~ %s => %s" % (location, lmark.src, matched)
+                if context:
+                    context_pairs.append((matched, context))
+            else:
+                unmatched_landmarks2.append(lmark)
+                if trace:
+                    print >>sys.stderr, "%s ~ %s => no" % (location, lmark.src)
+        unmatched_landmarks = unmatched_landmarks2
+    return context_pairs
 
 
 def main(args):
@@ -36,21 +46,25 @@ def main(args):
         locations.append(PWD)
     locations.append(os.getcwd())
 
-    matched, context = infer_context(landmarks, locations, trace)
+    context_pairs = infer_contexts(landmarks, locations, trace)
 
-    if not matched:
+    if not context_pairs:
         print >>sys.stderr, "contextual: failed to infer context: %s" % locations
         print >>sys.stdout, "exit 1"
         sys.exit(1)
 
-    context = context.format(*matched, ctx_dir=matched[0])
+    contexts = []
+    # reverse so that early rules context effects have precedence
+    for matched, context in reversed(context_pairs):
+        contexts.append(context.format(*matched, ctx_dir=matched[0]))
+    total_context = ';'.join(contexts)
 
     if trace:
-        print >>sys.stderr, "CONTEXT => %s" % context
+        print >>sys.stderr, "CONTEXT => %s" % total_context
         print >>sys.stdout, "exit 0"
         sys.exit(0)
     else:
-        print >>sys.stdout, context
+        print >>sys.stdout, total_context
 
 
 if __name__ == '__main__':

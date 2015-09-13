@@ -15,7 +15,7 @@ def home_and_projs(request, tmpdir):
     return home, a, b, p2p1
 
 
-def test_match(home_and_projs, monkeypatch):
+def test_match(home_and_projs, monkeypatch, capsys):
     home, a, b, p2p1 = home_and_projs
     conf = u"""
 {} := PROJ=1
@@ -25,6 +25,8 @@ def test_match(home_and_projs, monkeypatch):
     monkeypatch.chdir(a.strpath)
     monkeypatch.setenv('PWD', a.strpath)
     main([confp.strpath, 'cmd'])
+    out, err = capsys.readouterr()
+    assert out == 'PROJ=1\n'
 
 
 def test_no_match(home_and_projs, monkeypatch, capsys):
@@ -44,7 +46,7 @@ def test_no_match(home_and_projs, monkeypatch, capsys):
     assert err.startswith('contextual: failed to infer context:')
 
 
-def test_diverged_PWD(home_and_projs, monkeypatch):
+def test_diverged_PWD(home_and_projs, monkeypatch, capsys):
     home, a, b, p2p1 = home_and_projs
     conf = u"""
 {} := PROJ=1
@@ -55,3 +57,5 @@ def test_diverged_PWD(home_and_projs, monkeypatch):
     monkeypatch.chdir(p2p1.strpath)
     monkeypatch.setenv('PWD', p2p1.strpath)
     main([confp.strpath, 'cmd'])
+    out, err = capsys.readouterr()
+    assert out == 'PROJ=1;PROJ=2\n'
