@@ -47,12 +47,12 @@ used.
 A matching rule has *ctx-path-prefix* that is a prefix of the *start
 directory*. Then it has,
 
-- if *wildcard-descendant* is omitted in the rule, *start directory*
+- if *wildcard-descendant* is omitted in the rule, *ctx-path-prefix*
   itself or,
-- if *wildcard-descendant* is ``/*``, one direct subdirectory of
-  *ctx-path-prefix* and parent of *start directory*, or,
-- if *wildcard-descendant* is ``/**``, one parent of *start directory*
-  descendant subdirectory of *ctx-path-prefix* (included)
+- if *wildcard-descendant* is ``/*``, the one direct subdirectory of
+  *ctx-path-prefix* that is a parent of *start directory* (if it exists), or,
+- if *wildcard-descendant* is ``/**``, one descendant subdirectory of
+  *ctx-path-prefix* (included) that is a parent of *start directory*
 
 fulfilling all optional *landmark-cond landmark-path* pairs.
 
