@@ -5,26 +5,25 @@ import sys
 import landmark
 
 
-def infer_contexts(landmarks, locations, trace):
+def infer_contexts(landmarks, locations, tracef):
     context_pairs = []
     unmatched_landmarks = landmarks[:]
-    for location in locations:
-        if trace:
-            print >>sys.stderr, "start-dir: %s" % location
+    for kind, location in locations:
+        tracef("start-dir[{}]: {}", kind, location)
         location_segs = landmark.segs(location)
         # use a rule only once
         unmatched_landmarks2 = []
         for lmark in unmatched_landmarks:
             matched, context = lmark.match(location, location_segs)
             if matched:
-                if trace:
-                    print >>sys.stderr, "%s ~ %s => %s" % (location, lmark.src, matched)
                 if context:
+                    tracef(" ~~ {} => {}", lmark.src, matched)
                     context_pairs.append((matched, context))
+                else:
+                    tracef(" ~~ {} => void_context", lmark.src)
             else:
                 unmatched_landmarks2.append(lmark)
-                if trace:
-                    print >>sys.stderr, "%s ~ %s => no" % (location, lmark.src)
+                tracef(" ~~ {} => no", lmark.src)
         unmatched_landmarks = unmatched_landmarks2
     return context_pairs
 
@@ -34,19 +33,23 @@ def main(args):
     landmarks = landmark.parse(open(args[0]))
     runcmd = args[1]
     trace = False
+    tracef = lambda *a: None
     if len(args) >= 3 and args[2] == ':trace':
         args.pop(2)
         trace = True
 
+        def tracef(fmt, *a):
+            print >>sys.stderr, fmt.format(*a)
+
     locations = []
     if '/' in runcmd:
-        locations.append(os.path.dirname(os.path.abspath(runcmd)))
+        locations.append(('abscmd', os.path.dirname(os.path.abspath(runcmd))))
     PWD = os.getenv('PWD')
     if PWD:
-        locations.append(PWD)
-    locations.append(os.getcwd())
+        locations.append(('PWD', PWD))
+    locations.append(('getcwd', os.getcwd()))
 
-    context_pairs = infer_contexts(landmarks, locations, trace)
+    context_pairs = infer_contexts(landmarks, locations, tracef)
 
     if not context_pairs:
         print >>sys.stderr, "contextual: failed to infer context: %s" % locations
@@ -66,8 +69,8 @@ def main(args):
         print >>sys.stderr, "CONTEXT => %s" % total_context
         print >>sys.stdout, "exit 0"
         sys.exit(0)
-    else:
-        print >>sys.stdout, total_context
+
+    print >>sys.stdout, total_context
 
 
 if __name__ == '__main__':

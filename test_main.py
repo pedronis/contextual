@@ -104,3 +104,33 @@ def test_broken_placeholder(home_and_projs, monkeypatch, capsys):
     out, err = capsys.readouterr()
     assert out == 'PROJ=1\n'
     assert err == "contextual: 'PROJ={2}' has unbound/unknown placeholder\n"
+
+
+def test_trace(home_and_projs, monkeypatch, capsys):
+    home, a, b, p2p1 = home_and_projs
+    p1 = a.dirpath()
+    p2 = b.dirpath()
+    conf = u"""
+{} := PROJ=1
+{} := PROJ=2
+/  :=
+""".format(p1.strpath, p2.strpath)
+    confp = home.join('ctx.conf')
+    confp.write_text(conf, encoding='ascii')
+    monkeypatch.chdir(a.strpath)
+    monkeypatch.setenv('PWD', a.strpath)
+    with pytest.raises(SystemExit) as exit_info:
+        main([confp.strpath, 'cmd', ':trace'])
+    assert exit_info.value.code == 0
+    out, err = capsys.readouterr()
+    assert out == 'exit 0\n'
+    trace_lines = err.splitlines()
+    assert trace_lines == [
+        u'start-dir[PWD]: {}'.format(a.strpath),
+        u' ~~ {} := PROJ=1 => {!r}'.format(p1.strpath, [p1.strpath]),
+        u' ~~ {} := PROJ=2 => no'.format(p2.strpath),
+        u' ~~ /  := => void_context',
+        u'start-dir[getcwd]: {}'.format(a.strpath),
+        u' ~~ {} := PROJ=2 => no'.format(p2.strpath),
+        u'CONTEXT => PROJ=1',
+    ]
