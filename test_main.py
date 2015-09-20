@@ -46,6 +46,22 @@ def test_no_match(home_and_projs, monkeypatch, capsys):
     assert err.startswith('contextual: failed to infer context:')
 
 
+def test_void_context(home_and_projs, monkeypatch, capsys):
+    home, a, b, p2p1 = home_and_projs
+    conf = u"""
+{} := PROJ=1
+/  :=
+""".format(a.dirpath().strpath)
+    confp = home.join('ctx.conf')
+    confp.write_text(conf, encoding='ascii')
+    monkeypatch.chdir(b.strpath)
+    monkeypatch.setenv('PWD', b.strpath)
+    main([confp.strpath, 'cmd'])
+    out, err = capsys.readouterr()
+    assert out == '\n'
+    assert err == ''
+
+
 def test_rules_used_once(home_and_projs, monkeypatch, capsys):
     home, a, b, p2p1 = home_and_projs
     conf = u"""

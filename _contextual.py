@@ -22,7 +22,9 @@ def infer_contexts(landmarks, locations, tracef):
                     tracef(" ~~ {} => {}", lmark.src, matched)
                     context_pairs.append((matched, context))
                 else:
+                    # void context
                     tracef(" ~~ {} => void_context", lmark.src)
+                    context_pairs.append((None, None))
             else:
                 unmatched_landmarks2.append(lmark)
                 tracef(" ~~ {} => no", lmark.src)
@@ -61,6 +63,8 @@ def main(args):
     contexts = []
     # reverse so that early rules context effects have precedence
     for matched, context in reversed(context_pairs):
+        if context is None:
+            continue
         try:
             contexts.append(context.format(*matched, ctx_dir=matched[0]))
         except (IndexError, KeyError):
