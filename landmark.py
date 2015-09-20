@@ -27,13 +27,13 @@ import os
 import shlex
 import sys
 
-WHERE_CHECKS = {}
+LANDMARK_CHECKS = {}
 
 
 def register_check(syn):
     """Register syntax (e.g. -e) to check(path) function."""
     def _register(check):
-        WHERE_CHECKS[syn] = check
+        LANDMARK_CHECKS[syn] = check
         return check
     return _register
 
@@ -52,11 +52,11 @@ def check_is_executable(p):
     return os.access(p, os.X_OK)
 
 
-class WhereError(Exception):
-    """Error while fulfilling where clause"""
+class LandmarkError(Exception):
+    """Error while fulfilling landmark clause"""
 
 
-class WhereCond(object):
+class LandmarkCond(object):
     """Represents and tests for one directory landmark condition."""
 
     def __init__(self, check, relative):
@@ -68,20 +68,20 @@ class WhereCond(object):
         try:
             rel = self.relative.format(*matched, ctxdir=p)
         except (IndexError, KeyError):
-            raise WhereError("{!r} has unbound/unknown placeholder".format(self.relative))
+            raise LandmarkError("{!r} has unbound/unknown placeholder".format(self.relative))
         for cand in glob.glob(os.path.join(p, rel)):
             if self.check(cand):
                 yield cand
 
 
-class WhereClause(object):
+class LandmarkClause(object):
     """Represent and tests for matches all directory landmark conditions."""
 
     def __init__(self):
         self.conds = []
 
     def push_cond(self, check, relative):
-        self.conds.append(WhereCond(check, relative))
+        self.conds.append(LandmarkCond(check, relative))
 
     def find_matches(self, cond_index, matched):
         if cond_index >= len(self.conds):
@@ -135,10 +135,10 @@ class Landmark(object):
         self.where = where
         self.context = context
 
-    def _test_where(self, p):
+    def _test_landmarks(self, p):
         try:
             return self.where.test(p)
-        except WhereError as e:
+        except LandmarkError as e:
             print("contextual: [rule: {}] {}".format(self.src, e), file=sys.stderr)
             return None
 
@@ -152,7 +152,7 @@ class Landmark(object):
             if shortcut_segs != self.prefix_segs[-len(shortcut_segs):]:
                 return None, None
             lmark_p = os.path.join('/', '/'.join(self.prefix_segs))
-        matched = self._test_where(lmark_p)
+        matched = self._test_landmarks(lmark_p)
         if matched:
             return matched, self.context
         return None, None
@@ -171,7 +171,7 @@ class Landmark(object):
         i = up_to
         while i >= start and i <= len(p_segs):
             lmark_p = os.path.join('/', '/'.join(p_segs[0:i]))
-            matched = self._test_where(lmark_p)
+            matched = self._test_landmarks(lmark_p)
             if matched:
                 return matched, self.context
             i -= 1
@@ -204,14 +204,14 @@ def parse(cfg_lines):
         if parts:
             assert parts[0] == 'where'
             parts.pop(0)
-            where = WhereClause()
+            where = LandmarkClause()
             next_part = partial(next, iter(parts))
             while True:
                 try:
                     check_op = next_part()
                 except StopIteration:
                     break
-                check = WHERE_CHECKS[check_op]
+                check = LANDMARK_CHECKS[check_op]
                 relative = next_part()
                 where.push_cond(check, relative)
         try:

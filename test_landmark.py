@@ -37,8 +37,8 @@ def home_and_here(request, tmpdir):
 
 @pytest.fixture(scope="function")
 def non_empty_and_executable_dot_bashrc():
-    """Make a hopeful where clause"""
-    where = WhereClause()
+    """Make a hopeful landmark clause"""
+    where = LandmarkClause()
     where.push_cond(check_is_non_empty, '.bashrc')
     where.push_cond(check_is_executable, '{1}')
     return where
@@ -77,7 +77,7 @@ def test_landmark(home_and_here, non_empty_and_executable_dot_bashrc):
 def test_landmark_backtrack(home_and_here):
     home, p, s = home_and_here
 
-    where = WhereClause()
+    where = LandmarkClause()
     where.push_cond(os.path.isdir, '*')
     where.push_cond(os.path.isdir, '{1}/z')
 
@@ -85,7 +85,7 @@ def test_landmark_backtrack(home_and_here):
     res = l.match(p, s)
     assert res == ([home, os.path.join(home, 'y'), os.path.join(home, 'y/z')], 'ctx')
 
-    nowhere = WhereClause()
+    nowhere = LandmarkClause()
     nowhere.push_cond(os.path.isdir, '*')
     nowhere.push_cond(check_is_non_empty, '{1}/z')
 
@@ -96,8 +96,8 @@ def test_landmark_backtrack(home_and_here):
 
 @pytest.fixture(scope="function")
 def hopeless_where():
-    """Make a hopeless where clause"""
-    where1 = WhereClause()
+    """Make a hopeless landmark clause"""
+    where1 = LandmarkClause()
     where1.push_cond(lambda p: True, '.non-existent-file')
     return where1
 
