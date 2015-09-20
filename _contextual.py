@@ -1,4 +1,6 @@
 #!/usr/bin/python
+from __future__ import print_function
+
 import os
 import sys
 
@@ -39,7 +41,7 @@ def main(args):
         trace = True
 
         def tracef(fmt, *a):
-            print >>sys.stderr, fmt.format(*a)
+            print(fmt.format(*a), file=sys.stderr)
 
     locations = []
     if '/' in runcmd:
@@ -52,8 +54,8 @@ def main(args):
     context_pairs = infer_contexts(landmarks, locations, tracef)
 
     if not context_pairs:
-        print >>sys.stderr, "contextual: failed to infer context: %s" % locations
-        print >>sys.stdout, "exit 1"
+        print("contextual: failed to infer context: {}".format(locations), file=sys.stderr)
+        print("exit 1", file=sys.stdout)
         sys.exit(1)
 
     contexts = []
@@ -62,15 +64,16 @@ def main(args):
         try:
             contexts.append(context.format(*matched, ctx_dir=matched[0]))
         except (IndexError, KeyError):
-            print >>sys.stderr, 'contextual: {!r} has unbound/unknown placeholder'.format(context)
+            print('contextual: {!r} has unbound/unknown placeholder'.format(context),
+                  file=sys.stderr)
     total_context = ';'.join(contexts)
 
     if trace:
-        print >>sys.stderr, "CONTEXT => %s" % total_context
-        print >>sys.stdout, "exit 0"
+        print("CONTEXT => {}".format(total_context), file=sys.stderr)
+        print("exit 0", file=sys.stdout)
         sys.exit(0)
 
-    print >>sys.stdout, total_context
+    print(total_context, file=sys.stdout)
 
 
 if __name__ == '__main__':

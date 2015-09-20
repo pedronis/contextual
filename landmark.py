@@ -1,6 +1,8 @@
 """
 Parse directory landmark to context definitions, directory landmark matching.
 """
+from __future__ import print_function
+
 import glob
 import os
 import shlex
@@ -118,7 +120,7 @@ class Landmark(object):
         try:
             return self.where.test(p)
         except WhereError as e:
-            print >>sys.stderr, "contextual: [rule: %s] %s" % (self.src, e)
+            print("contextual: [rule: {}] {}".format(self.src, e), file=sys.stderr)
             return None
 
     def match_shortcut(self, shortcut, _):
@@ -196,7 +198,7 @@ def parse(cfg_lines):
         try:
             lmark = Landmark(prefix, wildcard_descendant, where, context)
         except TooUnconstrained:
-            print >>sys.stderr, "contextual: too unconstrained: %s" % line
+            print("contextual: too unconstrained: {}".format(line), file=sys.stderr)
             continue
         lmark.src = line
         landmarks.append(lmark)
