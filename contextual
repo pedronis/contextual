@@ -1,10 +1,18 @@
 #!/bin/bash
 cfg=$1
 export runcmd=$2
-if [ -z "$runcmd" ] ; then
-    echo usage: contextual conf command [:trace] [:shortcut] args...
+if [ -z "${runcmd}" ] ; then
+    if [ -n "${cfg}" ] ; then
+        the_alias=$(/bin/bash -i -c alias|grep contextual|head -1|cut -d= -f1|cut -d' ' -f2)
+        if [ -n "${the_alias}" ] ; then
+            echo usage: ${the_alias} command [:trace] args...
+            /bin/bash -i -c alias|grep "^alias ${the_alias}[^=]"|cut -c7-
+            exit 0
+        fi
+    fi
+    echo usage: contextual conf command [:trace] args...
     exit 0
 fi
 shift 2
-eval $(_contextual.py $cfg "$runcmd" "$@" )
-$runcmd "$@"
+eval $(_contextual.py ${cfg} "${runcmd}" "$@" )
+${runcmd} "$@"
