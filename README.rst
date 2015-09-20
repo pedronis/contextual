@@ -169,6 +169,8 @@ script deciding the invocation with the applied
 contexts. ``contextual`` is the trampoline shell script and uses and
 assumes Bash.
 
+The code for now should be kept Python 2 and Python 3 compatible.
+
 tests are written to be run with `pytest`_.
 
 .. _`pytest`: http://pytest.org
