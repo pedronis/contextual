@@ -119,7 +119,7 @@ class TooUnconstrained(Exception):
 
 
 class Landmark(object):
-    """Directory landmark representation and matching."""
+    """Directory landmark representation and matching a.k.a context rule."""
 
     def __init__(self, prefix, wildcard_descendant, where, context):
         if prefix is None:
