@@ -3,6 +3,7 @@ Parse directory landmark to context definitions, directory landmark matching.
 """
 from __future__ import print_function
 
+from functools import partial
 import glob
 import os
 import shlex
@@ -186,7 +187,7 @@ def parse(cfg_lines):
             assert parts[0] == 'where'
             parts.pop(0)
             where = WhereClause()
-            next_part = iter(parts).next
+            next_part = partial(next, iter(parts))
             while True:
                 try:
                     check_op = next_part()

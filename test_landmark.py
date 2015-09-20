@@ -9,7 +9,7 @@ def home_and_here(request, tmpdir):
     request.addfinalizer(lambda: tmpdir.remove(rec=1, ignore_errors=True))
     home = tmpdir.join('home', 'user0')
     home.join('.bashrc').write_text(u'#', 'ascii', ensure=True)
-    home.join('.bashrc').chmod(0700)
+    home.join('.bashrc').chmod(0o700)
     p = home.join('foo', 'bar').strpath
     home.join('x').ensure_dir()
     home.join('y/z').ensure_dir()
