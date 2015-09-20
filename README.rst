@@ -145,8 +145,33 @@ matching any rule. A matter of personal preference.
 Debugging Rules
 +++++++++++++++
 
+Usually contexts manipulate, add to the environment so an easy way to see what is applied is simply::
+
+  $ + env
+
+to see the processing of rules a dry-run can be invoked using the ``:trace`` flag just after the command::
+
+  $ + python :trace script.py
+  start-dir[PWD]: /home/pedronis/repos/contextual
+   ~~ ~/repos/* := source ~/repos/homeconf/repocontext {ctx_dir} => ['/home/pedronis/repos/contextual']
+   ~~ ~/go-ws/* := export GOPATH=~/go-ws => no
+   ~~ / := => void_context
+  start-dir[getcwd]: /home/pedronis/repos/contextual
+   ~~ ~/go-ws/* := export GOPATH=~/go-ws => no
+  CONTEXT => source ~/repos/homeconf/repocontext /home/pedronis/repos/contextual
+
+
 Hacking
 +++++++
+
+``landmark.py`` has the code for rules. ``_contextual.py`` is the main
+script deciding the invocation with the applied
+contexts. ``contextual`` is the trampoline shell script and uses and
+assumes Bash.
+
+tests are written to be run with `pytest`_.
+
+.. _`pytest`: http://pytest.org
 
 License
 +++++++
