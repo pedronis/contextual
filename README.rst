@@ -142,8 +142,8 @@ The last rule avoids getting ``contextual: failed to infer context:
 ...`` errors when using the aliases with *start directories* not
 matching any rule. A matter of personal preference.
 
-Debugging Rules
-+++++++++++++++
+Debugging of Rules
+++++++++++++++++++
 
 Usually contexts manipulate, add to the environment so an easy way to see what is applied is simply::
 
