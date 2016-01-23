@@ -1,8 +1,8 @@
 contextual: providing context for shell command invocations
 ===========================================================
 
-*contextual* is a utility that given the current working directory walks
-the tree to find relevant context(s), based on path prefixes and
+*contextual* is a utility that starting from current working directory walks
+up the tree to find relevant context(s), based on path prefixes and
 landmark conditions (simple ``test`` like checks), to apply before invoking
 the given command. It takes a configuration file with rules and the
 command and is conveniently used usually behind a short alias like
@@ -40,7 +40,7 @@ line, of the form::
 first as indicated by the environment variable ``PWD`` then as result
 of ``getcwd`` (which can be different in the presence of symlinks) and
 find matching rules for these *start directories*. If the given
-command has a path part (``/`` in it) its absolute form will also be
+command has a directory part (``/`` in it) that directory will also be
 used as a *start directory* and before the working directory variants.
 
 *ctx-path-prefix* values undergo ``~`` user expansion before being
