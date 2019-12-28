@@ -55,8 +55,8 @@ def main(args):
     landmarks = landmark.parse(open(args[0]))
     runcmd = args[1]
     trace = False
-    tracef = lambda *a: None
-    if len(args) >= 3 and args[2] == ':trace':
+    tracef = lambda *a: None  # noqa
+    if len(args) >= 3 and args[2] == ":trace":
         args.pop(2)
         trace = True
 
@@ -64,17 +64,19 @@ def main(args):
             print(fmt.format(*a), file=sys.stderr)
 
     locations = []
-    if '/' in runcmd:
-        locations.append(('abscmd', os.path.dirname(os.path.abspath(runcmd))))
-    PWD = os.getenv('PWD')
+    if "/" in runcmd:
+        locations.append(("abscmd", os.path.dirname(os.path.abspath(runcmd))))
+    PWD = os.getenv("PWD")
     if PWD:
-        locations.append(('PWD', PWD))
-    locations.append(('getcwd', os.getcwd()))
+        locations.append(("PWD", PWD))
+    locations.append(("getcwd", os.getcwd()))
 
     context_pairs = infer_contexts(landmarks, locations, tracef)
 
     if not context_pairs:
-        print("contextual: failed to infer context: {}".format(locations), file=sys.stderr)
+        print(
+            "contextual: failed to infer context: {}".format(locations), file=sys.stderr
+        )
         print("exit 1", file=sys.stdout)
         sys.exit(1)
 
@@ -86,9 +88,11 @@ def main(args):
         try:
             contexts.append(context.format(*matched, ctx_dir=matched[0]))
         except (IndexError, KeyError):
-            print('contextual: {!r} has unbound/unknown placeholder'.format(context),
-                  file=sys.stderr)
-    total_context = ';'.join(contexts)
+            print(
+                "contextual: {!r} has unbound/unknown placeholder".format(context),
+                file=sys.stderr,
+            )
+    total_context = ";".join(contexts)
 
     if trace:
         print("CONTEXT => {}".format(total_context), file=sys.stderr)
@@ -98,5 +102,5 @@ def main(args):
     print(total_context, file=sys.stdout)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.argv[1:])

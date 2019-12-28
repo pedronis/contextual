@@ -32,22 +32,25 @@ LANDMARK_CHECKS = {}
 
 def register_check(syn):
     """Register syntax (e.g. -e) to check(path) function."""
+
     def _register(check):
         LANDMARK_CHECKS[syn] = check
         return check
+
     return _register
 
-register_check('-d')(os.path.isdir)
-register_check('-e')(os.path.exists)
-register_check('-f')(os.path.isfile)
+
+register_check("-d")(os.path.isdir)
+register_check("-e")(os.path.exists)
+register_check("-f")(os.path.isfile)
 
 
-@register_check('-s')
+@register_check("-s")
 def check_is_non_empty(p):
     return os.path.isfile(p) and os.path.getsize(p) > 0
 
 
-@register_check('-x')
+@register_check("-x")
 def check_is_executable(p):
     return os.access(p, os.X_OK)
 
@@ -68,7 +71,9 @@ class LandmarkCond(object):
         try:
             rel = self.relative.format(*matched, ctxdir=p)
         except (IndexError, KeyError):
-            raise LandmarkError("{!r} has unbound/unknown placeholder".format(self.relative))
+            raise LandmarkError(
+                "{!r} has unbound/unknown placeholder".format(self.relative)
+            )
         for cand in glob.glob(os.path.join(p, rel)):
             if self.check(cand):
                 yield cand
@@ -88,7 +93,7 @@ class LandmarkClause(object):
             return matched
         cond = self.conds[cond_index]
         for cand in cond.matching(matched):
-            got = self.find_matches(cond_index+1, matched+[cand])
+            got = self.find_matches(cond_index + 1, matched + [cand])
             if got:
                 return got
         return None
@@ -106,10 +111,10 @@ class Succeed(object):
 
 def segs(p):
     """Segment a path."""
-    if p == '/':
+    if p == "/":
         return []
-    p_segs = p.split('/')
-    if p_segs[0] == '':
+    p_segs = p.split("/")
+    if p_segs[0] == "":
         p_segs.pop(0)
     return p_segs
 
@@ -124,11 +129,11 @@ class Landmark(object):
     def __init__(self, prefix, wildcard_descendant, where, context):
         if prefix is None:
             self.prefix_segs = []
-            wildcard_descendant = 'rec'
+            wildcard_descendant = "rec"
         else:
             self.prefix_segs = segs(prefix)
         if where is None:
-            if wildcard_descendant == 'rec':
+            if wildcard_descendant == "rec":
                 raise TooUnconstrained()
             where = Succeed()
         self.wildcard_descendant = wildcard_descendant
@@ -144,14 +149,14 @@ class Landmark(object):
 
     def match_shortcut(self, shortcut, _):
         if self.wildcard_descendant:
-            lmark_p = os.path.join('/', '/'.join(self.prefix_segs), shortcut)
+            lmark_p = os.path.join("/", "/".join(self.prefix_segs), shortcut)
             if not os.path.isdir(lmark_p):
                 return None, None
         else:
             shortcut_segs = segs(shortcut)
-            if shortcut_segs != self.prefix_segs[-len(shortcut_segs):]:
+            if shortcut_segs != self.prefix_segs[-len(shortcut_segs) :]:  # noqa
                 return None, None
-            lmark_p = os.path.join('/', '/'.join(self.prefix_segs))
+            lmark_p = os.path.join("/", "/".join(self.prefix_segs))
         matched = self._test_landmarks(lmark_p)
         if matched:
             return matched, self.context
@@ -163,14 +168,14 @@ class Landmark(object):
             return None, None
         if self.wildcard_descendant is None:
             up_to = start = n_prefix_segs
-        elif self.wildcard_descendant == 'one':
-            up_to = start = n_prefix_segs+1
-        elif self.wildcard_descendant == 'rec':
+        elif self.wildcard_descendant == "one":
+            up_to = start = n_prefix_segs + 1
+        elif self.wildcard_descendant == "rec":
             start = n_prefix_segs
             up_to = len(p_segs)
         i = up_to
         while i >= start and i <= len(p_segs):
-            lmark_p = os.path.join('/', '/'.join(p_segs[0:i]))
+            lmark_p = os.path.join("/", "/".join(p_segs[0:i]))
             matched = self._test_landmarks(lmark_p)
             if matched:
                 return matched, self.context
@@ -183,26 +188,26 @@ def parse(cfg_lines):
     landmarks = []
     for line in cfg_lines:
         line = line.strip()
-        if not line or line.startswith('#'):
+        if not line or line.startswith("#"):
             continue
-        landmark_def, context = line.split(':=')
+        landmark_def, context = line.split(":=")
         parts = shlex.split(landmark_def)
         context = context.strip()
         wildcard_descendant = None
-        if parts[0] != 'where':
+        if parts[0] != "where":
             prefix = os.path.expanduser(parts[0])
             parts.pop(0)
-            if prefix.endswith('/*'):
+            if prefix.endswith("/*"):
                 prefix = prefix[:-2]
-                wildcard_descendant = 'one'
-            elif prefix.endswith('/**'):
+                wildcard_descendant = "one"
+            elif prefix.endswith("/**"):
                 prefix = prefix[:-3]
-                wildcard_descendant = 'rec'
+                wildcard_descendant = "rec"
         else:
             prefix = None
         where = None
         if parts:
-            assert parts[0] == 'where'
+            assert parts[0] == "where"
             parts.pop(0)
             where = LandmarkClause()
             next_part = partial(next, iter(parts))
