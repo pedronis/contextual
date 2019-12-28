@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # contextual: providing context for shell command invocations
 # Copyright 2008-2015  Samuele Pedroni
 #
